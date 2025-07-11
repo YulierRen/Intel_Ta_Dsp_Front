@@ -15,7 +15,7 @@ export default defineConfig({
     }
   },
   server: {
-    host: 'localhost',
+    host:'localhost',
     port: 5173, // 默认 Vite 端口
     proxy: {
       '/api': {

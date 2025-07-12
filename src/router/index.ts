@@ -5,7 +5,8 @@ import Dashboard from "../pages/Dashboard.vue"
 import Main from "../pages/Main.vue"
 import Homepage from "../pages/homepage.vue";
 import DiaryGround from "../pages/DiaryGround.vue";
-import FriendList from "../pages/FriendList.vue" // 新增引入
+import FriendList from "../pages/FriendList.vue"
+import UserManage from "../pages/UserManage.vue"; // 新增引入
 
 const routes = [
     { path: '/login', component: Login },
@@ -14,7 +15,8 @@ const routes = [
     { path: '/main', component: Main },
     { path: '/homepage', component: Homepage },
     { path: '/diaryground', component: DiaryGround},
-    { path: '/friendlist', component: FriendList } // 新增路由
+    { path: '/friendlist', component: FriendList }, // 新增路由
+    { path: '/usermanage', component:UserManage}
 ]
 
 const router = createRouter({

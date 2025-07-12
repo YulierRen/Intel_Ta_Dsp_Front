@@ -1,96 +1,101 @@
 <template>
   <div class="p-6 max-w-5xl mx-auto">
-    <h2 class="text-2xl font-bold mb-4">用户管理</h2>
+    <el-card class="mb-6">
+      <template #header>添加新用户</template>
+      <el-form :inline="true" :model="newUser" class="flex flex-wrap items-center gap-4">
+        <el-form-item label="用户名">
+          <el-input v-model="newUser.username" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input v-model="newUser.password" type="password" placeholder="请输入密码" />
+        </el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="newUser.role" placeholder="选择角色" style="width: 120px">
+            <el-option label="USER" value="USER" />
+            <el-option label="ADMIN" value="ADMIN" />
+          </el-select>
+        </el-form-item>
+        <el-button type="primary" @click="addUser">添加</el-button>
+      </el-form>
+    </el-card>
 
-    <!-- 添加用户表单 -->
-    <div class="bg-white rounded-xl shadow p-4 mb-6">
-      <h3 class="text-xl font-semibold mb-2">添加新用户</h3>
-      <div class="grid grid-cols-4 gap-4">
-        <input v-model="newUser.username" placeholder="用户名" class="border p-2 rounded" />
-        <input v-model="newUser.password" placeholder="密码" class="border p-2 rounded" />
-        <select v-model="newUser.role" class="border p-2 rounded">
-          <option value="USER">USER</option>
-          <option value="ADMIN">ADMIN</option>
-        </select>
-        <button @click="addUser" class="bg-blue-500 text-white px-4 py-2 rounded">添加</button>
-      </div>
-    </div>
-
-    <!-- 用户列表 -->
-    <table class="table-auto w-full bg-white rounded-xl shadow overflow-hidden">
-      <thead class="bg-gray-100">
-      <tr>
-        <th class="p-3">ID</th>
-        <th class="p-3">用户名</th>
-        <th class="p-3">角色</th>
-        <th class="p-3">操作</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr v-for="user in users" :key="user.id" class="text-center border-t">
-        <td class="p-2">{{ user.id }}</td>
-        <td class="p-2">{{ user.username }}</td>
-        <td class="p-2">{{ user.role }}</td>
-        <td class="p-2 space-x-2">
-          <button @click="deleteUser(user)" class="text-red-500 hover:underline">删除</button>
-          <button @click="openEditDialog(user)" class="text-blue-500 hover:underline">修改</button>
-        </td>
-      </tr>
-      </tbody>
-    </table>
+    <el-card>
+      <template #header>用户列表</template>
+      <el-table :data="users" style="width: 100%">
+        <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column prop="username" label="用户名" />
+        <el-table-column prop="role" label="角色" />
+        <el-table-column label="操作" width="180">
+          <template #default="scope">
+            <el-button type="danger" size="small" @click="deleteUser(scope.row)">删除</el-button>
+            <el-button type="primary" size="small" @click="openEditDialog(scope.row)">修改</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
 
     <!-- 修改用户弹窗 -->
-    <div v-if="editingUser" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-      <div class="bg-white rounded-xl p-6 w-96">
-        <h3 class="text-lg font-semibold mb-4">修改用户信息</h3>
-        <input v-model="editingUser.username" class="border p-2 mb-2 w-full rounded" placeholder="用户名" />
-        <input v-model="editingUser.password" class="border p-2 mb-2 w-full rounded" placeholder="密码" />
-        <select v-model="editingUser.role" class="border p-2 mb-4 w-full rounded">
-          <option value="USER">USER</option>
-          <option value="ADMIN">ADMIN</option>
-        </select>
-        <div class="flex justify-end space-x-2">
-          <button @click="updateUser" class="bg-green-500 text-white px-4 py-2 rounded">保存</button>
-          <button @click="editingUser = null" class="bg-gray-300 px-4 py-2 rounded">取消</button>
-        </div>
-      </div>
-    </div>
+    <el-dialog v-model="editDialogVisible" title="修改用户信息" width="400px">
+      <el-form :model="editingUser" label-width="80px">
+        <el-form-item label="用户名">
+          <el-input v-model="editingUser.username" />
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input v-model="editingUser.password" type="password" />
+        </el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="editingUser.role" placeholder="选择角色">
+            <el-option label="USER" value="USER" />
+            <el-option label="ADMIN" value="ADMIN" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="updateUser">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from '@/utils/axios'
+import { ElMessage } from 'element-plus'
 
 const users = ref([])
 const newUser = ref({ username: '', password: '', role: 'USER' })
-const editingUser = ref(null)
+const editingUser = ref({})
+const editDialogVisible = ref(false)
 
 const loadUsers = async () => {
   users.value = await axios.post('/user/allUser')
-  console.log(users.value)
 }
 
 const addUser = async () => {
   await axios.post('/user/add', newUser.value)
-  await loadUsers()
+  ElMessage.success('添加成功')
   newUser.value = { username: '', password: '', role: 'USER' }
+  await loadUsers()
 }
 
 const deleteUser = async (user) => {
   await axios.delete('/user/delete', { data: user })
+  ElMessage.success('删除成功')
   await loadUsers()
 }
 
 const openEditDialog = (user) => {
   editingUser.value = { ...user }
+  editDialogVisible.value = true
 }
 
 const updateUser = async () => {
   await axios.put('/user/changeUsername', editingUser.value)
   await axios.put('/user/changePassword', editingUser.value)
   await axios.put('/user/changeRole', editingUser.value)
-  editingUser.value = null
+  ElMessage.success('修改成功')
+  editDialogVisible.value = false
   await loadUsers()
 }
 
@@ -98,7 +103,7 @@ onMounted(loadUsers)
 </script>
 
 <style scoped>
-th, td {
-  text-align: center;
+.el-form-item {
+  margin-bottom: 16px;
 }
 </style>

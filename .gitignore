@@ -14,7 +14,8 @@ dist-ssr
 
 # 编辑器配置（VSCode等）
 .vscode/                # 忽略整个.vscode文件夹
-!.vscode/extensions.json  # 但保留 extensions.json 文件
+
+.vite/
 
 .idea/
 .DS_Store
@@ -29,5 +30,8 @@ package-lock.json
 package.json
 tsconfig.app.json
 tsconfig.json
-tsconfig.node.json
-vite.config.ts         # 排除 vite 配置文件
+tsconfig.node.json    # 排除 vite 配置文件
+/.vscode/launch.json
+/.vscode/tasks.json
+/vite.config.ts
+/tsconfig.node.json

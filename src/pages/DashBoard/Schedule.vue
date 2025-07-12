@@ -44,7 +44,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import axios from '@/utils/axios'
+import axios from '@/utils/axios.js'
 
 const dayNames = ['日', '一', '二', '三', '四', '五', '六']
 

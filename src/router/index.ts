@@ -50,7 +50,18 @@ const router = createRouter({
             path: '/usermanage',
             meta: {title: "用户管理"},
             component: UserManage
+        },
+        {
+            path: '/404NotFound',
+            name: '404NotFound',
+            meta: {title: "404 NotFound"},
+            component: () => import('../pages/NotFound.vue')
+        },
+        {
+            path: "/:pathMatch(.*)",
+            redirect: '/404NotFound'
         }
+
     ]
 })
 

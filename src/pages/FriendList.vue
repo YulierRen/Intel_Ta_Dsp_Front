@@ -46,7 +46,7 @@ const fetchFriends = async () => {
   error.value = ''
   try {
     const userId = localStorage.getItem('studentId')
-    const res = await axios.post('/userFriend/getFriendList', { userId })
+    const res = await axios.post('/userFriend/getFriendList?id=${userId}')
     friends.value = res || []
   } catch (e) {
     error.value = '获取好友列表失败'

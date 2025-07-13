@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Login from "../pages/Login.vue"
 import Register from "../pages/Register.vue"
 import Dashboard from "../pages/Dashboard.vue"
-import Homepage from "../pages/homepage.vue";
+import Homepage from "../pages/Homepage.vue";
 import DiaryGround from "../pages/DiaryGround.vue";
 import FriendList from "../pages/FriendList.vue"
 import UserManage from "../pages/UserManage.vue"; // 新增引入
@@ -28,7 +28,7 @@ const router = createRouter({
         },
         {
             path: '/dashboard',
-            meta: {title: "日程表"},
+            meta: {title: "个人主板"},
             component: Dashboard
         },
         {
@@ -38,7 +38,7 @@ const router = createRouter({
         },
         {
             path: '/diaryground',
-            meta: {title: "他律广场"},
+            meta: {title: "生活广场"},
             component: DiaryGround
         },
         {

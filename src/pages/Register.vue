@@ -143,28 +143,28 @@ onUnmounted(() => {
     <!-- 左侧内容区（复用登录页） -->
     <div class="left-panel">
       <div class="welcome-box">
-        <h1>欢迎注册课表系统</h1>
-        <p>高效管理您的学习计划与课程安排</p>
+        <h1>欢迎注册日程管理系统</h1>
+        <p>高效管理您的计划与日程安排</p>
         <div class="feature-list">
           <div class="feature-item">
             <span class="icon">📅</span>
             <div>
-              <h3>智能课表</h3>
-              <p>直观展示每周课程安排</p>
+              <h3>智能日程表</h3>
+              <p>直观展示每天日程安排</p>
             </div>
           </div>
           <div class="feature-item">
             <span class="icon">🔔</span>
             <div>
-              <h3>课程提醒</h3>
-              <p>重要课程不再错过</p>
+              <h3>日程提醒</h3>
+              <p>重要日程不再错过</p>
             </div>
           </div>
           <div class="feature-item">
             <span class="icon">📊</span>
             <div>
-              <h3>学习统计</h3>
-              <p>可视化您的学习进度</p>
+              <h3>日程广场</h3>
+              <p>分享生活</p>
             </div>
           </div>
         </div>
@@ -174,7 +174,7 @@ onUnmounted(() => {
     <!-- 注册表单内容区 -->
     <div class="login-content">
       <div class="logo">
-        <span class="logo-icon">🌈</span>
+        <span class="logo-icon"></span>
         <span class="logo-text">注册</span>
       </div>
 

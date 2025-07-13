@@ -32,6 +32,15 @@ const recommendedDiaries = [
 function gotoDiaryGround() {
   router.push('/diaryground')
 }
+function gotoHomePage() {
+  router.push('/homepage')
+}
+// function gotoDiaryGround() {
+//   router.push('/diaryground')
+// }
+// function gotoDiaryGround() {
+//   router.push('/diaryground')
+// }
 function gotoFriendList() {
   router.push('/friendlist')
 }
@@ -46,6 +55,27 @@ function gotoFriendList() {
         <div>
           <div class="sidebar-title">日程广场</div>
           <div class="sidebar-desc">发现大家的日程与动态</div>
+        </div>
+      </div>
+      <div class="sidebar-card top" @click="gotoHomePage">
+        <div class="sidebar-icon">📅</div>
+        <div>
+          <div class="sidebar-title">个人主页</div>
+          <div class="sidebar-desc">我的主页</div>
+        </div>
+      </div>
+      <div class="sidebar-card top" @click="gotoDiaryGround">
+        <div class="sidebar-icon">📖</div>
+        <div>
+          <div class="sidebar-title">可扩展选项</div>
+          <div class="sidebar-desc">建设中</div>
+        </div>
+      </div>
+      <div class="sidebar-card top" @click="gotoDiaryGround">
+        <div class="sidebar-icon">📖</div>
+        <div>
+          <div class="sidebar-title">可扩展选项</div>
+          <div class="sidebar-desc">建设中</div>
         </div>
       </div>
       <div class="sidebar-card bottom" @click="gotoFriendList">
@@ -134,7 +164,7 @@ function gotoFriendList() {
   opacity: 0.85;
 }
 .sidebar-card.top {
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 .sidebar-card.bottom {
   margin-top: auto;

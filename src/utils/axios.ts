@@ -27,6 +27,8 @@ instance.interceptors.response.use(response => {
         window.location.href = '/login'
     } else if (error.response?.status === 403) {
         alert('权限不足')
+    } else if (error.response?.status === 404) {
+        alert('管理员好像把你删了，呼呼呼')
     } else {
         console.error('请求失败', error)
     }

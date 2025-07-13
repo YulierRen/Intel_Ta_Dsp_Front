@@ -1,209 +1,133 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 font-sans text-gray-800">
-    <!-- Header -->
-    <header class="bg-white shadow-xl border-b-2 border-blue-200">
-      <div class="max-w-6xl mx-auto px-4 py-6">
-        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">公开日记</h1>
-        <p class="text-gray-600 mt-2 text-lg">发现和分享生活中的美好时刻</p>
+  <div class="diaryground-bg">
+    <!-- 顶部标题 -->
+    <div class="header-bar">
+      <div class="header-title">
+        <span class="icon">📖</span>
+        <span>日程广场</span>
       </div>
-    </header>
-
-    <!-- Search Section -->
-    <div class="max-w-6xl mx-auto px-4 py-10">
-      <div class="bg-white rounded-2xl shadow-xl p-8 mb-10 border-2 border-blue-100">
-        <div class="flex flex-col md:flex-row gap-6">
-          <div class="flex-1">
-            <label for="search" class="block text-sm font-medium text-gray-700 mb-2">
-              搜索日记
-            </label>
-            <div class="relative">
-              <Search class="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-400 w-5 h-5" />
-              <input
-                  id="search"
-                  v-model="searchQuery"
-                  type="text"
-                  placeholder="搜索标题或内容..."
-                  class="w-full pl-12 pr-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out text-base shadow-sm"
-                  @input="handleSearch"
-              />
-            </div>
-          </div>
-          <div class="md:w-48">
-            <label for="sort" class="block text-sm font-medium text-gray-700 mb-2">
-              排序方式
-            </label>
-            <select
-                id="sort"
-                v-model="sortBy"
-                class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ease-in-out text-base bg-white appearance-none shadow-sm"
-                @change="handleSort"
-            >
-              <option value="newest">最新发布</option>
-              <option value="oldest">最早发布</option>
-              <option value="title">标题排序</option>
-            </select>
-          </div>
-        </div>
+      <div class="header-desc">发现和分享生活中的美好</div>
+    </div>
+    <div class="dashboard-btn-wrapper">
+      <button class="dashboard-btn" @click="goToDashboard">
+        回到主板
+      </button>
+    </div>
+    <!-- 搜索栏 -->
+    <div class="search-bar-center">
+      <div class="search-bar-inner">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="搜索标题或内容..."
+          class="search-input"
+          @input="handleSearch"
+        />
+        <span class="search-icon">🔍</span>
+        <select v-model="sortBy" class="sort-select" @change="handleSort">
+          <option value="newest">最新发布</option>
+          <option value="oldest">最早发布</option>
+          <option value="title">标题排序</option>
+        </select>
       </div>
-
-      <!-- Results Info -->
-      <div class="mb-8 text-lg text-gray-700">
-        <p>
-          找到 <span class="font-bold text-blue-700">{{ filteredDiaries.length }}</span> 篇公开日记
-        </p>
+      <div class="search-result-info">
+        找到 <span class="highlight">{{ filteredDiaries.length }}</span> 篇公开日记
       </div>
-
-      <!-- Loading State -->
-      <div v-if="loading" class="flex justify-center py-20">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
-      </div>
-
-      <!-- Diary Grid -->
-      <div v-else-if="filteredDiaries.length > 0" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        <div
-            v-for="diary in paginatedDiaries"
-            :key="diary.id"
-            class="bg-white rounded-xl shadow-lg border-2 border-blue-200 hover:shadow-2xl hover:border-blue-400 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-[1.01] overflow-hidden"
-        >
-          <div class="p-6">
-            <div class="flex items-start justify-between mb-3">
-              <h3 class="text-xl font-semibold text-gray-900 line-clamp-2 pr-4">
-                {{ diary.title }}
-              </h3>
-              <div class="flex items-center text-green-700 bg-green-100 px-3 py-1 rounded-full text-xs font-medium ml-2 whitespace-nowrap border border-green-300">
-                <Globe class="w-3 h-3 mr-1" />
-                公开
-              </div>
-            </div>
-
-            <p class="text-gray-700 text-sm mb-4 line-clamp-3 leading-relaxed">
-              {{ diary.content }}
-            </p>
-
-            <div class="flex items-center justify-between text-sm text-gray-600 border-t border-gray-200 pt-4 mt-4">
-              <div class="flex items-center">
-                <User class="w-4 h-4 mr-1 text-blue-400" />
-                用户 {{ diary.userId }}
-              </div>
-              <div class="flex items-center">
-                <Calendar class="w-4 h-4 mr-1 text-blue-400" />
-                {{ formatDate(diary.createdAt) }}
-              </div>
-            </div>
-
-            <button
-                @click="openDiary(diary)"
-                class="mt-6 w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border border-blue-700"
-            >
-              阅读全文
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div v-else class="text-center py-20">
-        <BookOpen class="w-20 h-20 text-gray-400 mx-auto mb-6" />
-        <h3 class="text-2xl font-medium text-gray-900 mb-3">暂无公开日记</h3>
-        <p class="text-gray-600 text-lg">{{ searchQuery ? '没有找到匹配的日记' : '还没有用户分享公开日记' }}</p>
-      </div>
-
-      <!-- Pagination -->
-      <div v-if="filteredDiaries.length > itemsPerPage" class="flex justify-center mt-12">
-        <nav class="flex items-center space-x-2">
-          <button
-              @click="currentPage = Math.max(1, currentPage - 1)"
-              :disabled="currentPage === 1"
-              class="px-4 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          >
-            <ChevronLeft class="w-5 h-5" />
-          </button>
-
-          <span
-              v-for="page in visiblePages"
-              :key="page"
-              @click="typeof page === 'number' && (currentPage = page)"
-              :class="[
-              'px-4 py-2 rounded-lg cursor-pointer text-lg font-medium',
-              typeof page === 'number' && page === currentPage
-                ? 'bg-blue-700 text-white shadow-md border-2 border-blue-700'
-                : 'border-2 border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-400 transition-colors duration-200'
-            ]"
-          >
-            {{ page }}
-          </span>
-
-          <button
-              @click="currentPage = Math.min(totalPages, currentPage + 1)"
-              :disabled="currentPage === totalPages"
-              class="px-4 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          >
-            <ChevronRight class="w-5 h-5" />
-          </button>
-        </nav>
-                                                                                                                                         </div>
     </div>
 
-    <!-- Diary Modal -->
-    <Transition name="modal-fade">
+    <!-- 帖子栅格 -->
+    <div v-if="loading" class="loading-spinner">
+      <div class="spinner"></div>
+    </div>
+    <div v-else>
+      <div v-if="filteredDiaries.length > 0" class="diary-grid">
+        <div
+          v-for="diary in paginatedDiaries"
+          :key="diary.id"
+          class="diary-card"
+          @click="openDiary(diary)"
+        >
+          <div class="diary-card-header">
+            <span class="diary-title">{{ diary.title }}</span>
+            <span class="diary-public">公开</span>
+          </div>
+          <div class="diary-content-preview">
+            {{ diary.content.length > 80 ? diary.content.slice(0, 80) + '...' : diary.content }}
+          </div>
+          <div class="diary-card-footer">
+            <span class="user-info">👤 用户{{ diary.userId }}</span>
+            <span class="date-info">🗓 {{ formatDate(diary.createdAt) }}</span>
+          </div>
+        </div>
+      </div>
+      <div v-else class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">暂无公开日记</div>
+        <div class="empty-desc">{{ searchQuery ? '没有找到匹配的日记' : '还没有用户分享公开日记' }}</div>
+      </div>
+    </div>
+
+    <!-- 分页 -->
+    <div v-if="filteredDiaries.length > itemsPerPage" class="pagination-bar">
+      <button
+        @click="currentPage = Math.max(1, currentPage - 1)"
+        :disabled="currentPage === 1"
+        class="pagination-btn"
+      >‹</button>
+      <span
+        v-for="page in visiblePages"
+        :key="page"
+        @click="typeof page === 'number' && (currentPage = page)"
+        :class="[
+          'pagination-page',
+          typeof page === 'number' && page === currentPage ? 'active' : '',
+          typeof page !== 'number' ? 'ellipsis' : ''
+        ]"
+      >{{ page }}</span>
+      <button
+        @click="currentPage = Math.min(totalPages, currentPage + 1)"
+        :disabled="currentPage === totalPages"
+        class="pagination-btn"
+      >›</button>
+    </div>
+
+    <!-- 日记详情弹窗 -->
+    <transition name="modal-fade">
       <div
-          v-if="selectedDiary"
-          class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"
-          @click="closeDiary"
+        v-if="selectedDiary"
+        class="modal-mask"
+        @click="closeDiary"
       >
-        <Transition name="modal-content">
+        <transition name="modal-content">
           <div
-              v-if="selectedDiary"
-              class="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform scale-100 opacity-100 border-2 border-blue-300"
-              @click.stop
+            v-if="selectedDiary"
+            class="modal-content"
+            @click.stop
           >
-            <div class="p-8">
-              <div class="flex items-start justify-between mb-6">
-                <h2 class="text-3xl font-bold text-gray-900 pr-6 leading-tight">
-                  {{ selectedDiary.title }}
-                </h2>
-                <button
-                    @click="closeDiary"
-                    class="text-gray-500 hover:text-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 rounded-full p-1"
-                >
-                  <X class="w-7 h-7" />
-                </button>
-              </div>
-
-              <div class="flex flex-wrap items-center text-base text-gray-600 mb-8 space-x-4 border-b border-gray-300 pb-4">
-                <div class="flex items-center">
-                  <User class="w-5 h-5 mr-1 text-blue-500" />
-                  用户 {{ selectedDiary.userId }}
-                </div>
-                <div class="flex items-center">
-                  <Calendar class="w-5 h-5 mr-1 text-blue-500" />
-                  {{ formatDate(selectedDiary.createdAt) }}
-                </div>
-                <div class="flex items-center text-green-700 bg-green-100 px-3 py-1 rounded-full text-sm font-medium border border-green-300">
-                  <Globe class="w-4 h-4 mr-1" />
-                  公开
-                </div>
-              </div>
-
-              <div class="prose max-w-none text-gray-800 text-lg leading-relaxed">
-                <p class="whitespace-pre-wrap">
-                  {{ selectedDiary.content }}
-                </p>
-              </div>
+            <div class="modal-header">
+              <span class="modal-title">{{ selectedDiary.title }}</span>
+              <button class="modal-close" @click="closeDiary">×</button>
+            </div>
+            <div class="modal-meta">
+              <span>👤 用户{{ selectedDiary.userId }}</span>
+              <span>🗓 {{ formatDate(selectedDiary.createdAt) }}</span>
+              <span class="diary-public">公开</span>
+            </div>
+            <div class="modal-body">
+              <pre>{{ selectedDiary.content }}</pre>
             </div>
           </div>
-        </Transition>
+        </transition>
       </div>
-    </Transition>
+    </transition>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { Search, User, Calendar, Globe, BookOpen, ChevronLeft, ChevronRight, X } from 'lucide-vue-next'
 import axios from 'axios'
+import {useRouter} from "vue-router";
 
-// 响应式数据
 const diaries = ref([])
 const searchQuery = ref('')
 const sortBy = ref('newest')
@@ -212,7 +136,6 @@ const selectedDiary = ref(null)
 const currentPage = ref(1)
 const itemsPerPage = 12
 
-// 模拟数据 - 确保与 UserDiary 结构一致
 const mockDiaries = [
   {
     id: 1,
@@ -351,20 +274,15 @@ const mockDiaries = [
   }
 ]
 
-// 计算属性
 const filteredDiaries = computed(() => {
   let filtered = diaries.value.filter(diary => diary.isPublic)
-
-  // 搜索过滤
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(diary =>
-        diary.title.toLowerCase().includes(query) ||
-        diary.content.toLowerCase().includes(query)
+      diary.title.toLowerCase().includes(query) ||
+      diary.content.toLowerCase().includes(query)
     )
   }
-
-  // 排序
   filtered.sort((a, b) => {
     switch (sortBy.value) {
       case 'newest':
@@ -377,12 +295,13 @@ const filteredDiaries = computed(() => {
         return 0
     }
   })
-
   return filtered
 })
-
+const router = useRouter()
+const goToDashboard = () => {
+  router.push('/dashboard')
+}
 const totalPages = computed(() => Math.ceil(filteredDiaries.value.length / itemsPerPage))
-
 const paginatedDiaries = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
@@ -393,52 +312,28 @@ const visiblePages = computed(() => {
   const pages = []
   const total = totalPages.value
   const current = currentPage.value
-
   if (total <= 7) {
-    for (let i = 1; i <= total; i++) {
-      pages.push(i)
-    }
+    for (let i = 1; i <= total; i++) pages.push(i)
   } else {
     if (current <= 4) {
-      for (let i = 1; i <= 5; i++) {
-        pages.push(i)
-      }
+      for (let i = 1; i <= 5; i++) pages.push(i)
       pages.push('...', total)
     } else if (current >= total - 3) {
       pages.push(1, '...')
-      for (let i = total - 4; i <= total; i++) {
-        pages.push(i)
-      }
+      for (let i = total - 4; i <= total; i++) pages.push(i)
     } else {
       pages.push(1, '...')
-      for (let i = current - 1; i <= current + 1; i++) {
-        pages.push(i)
-      }
+      for (let i = current - 1; i <= current + 1; i++) pages.push(i)
       pages.push('...', total)
     }
   }
-
-  // 过滤掉重复的 '...'
-  return pages.filter((page, index, self) => page !== '...' || self.indexOf(page) === index)
+  return pages.filter((page, idx, arr) => page !== '...' || arr.indexOf(page) === idx)
 })
 
-// 方法
-const handleSearch = () => {
-  currentPage.value = 1
-}
-
-const handleSort = () => {
-  currentPage.value = 1
-}
-
-const openDiary = (diary) => {
-  selectedDiary.value = diary
-}
-
-const closeDiary = () => {
-  selectedDiary.value = null
-}
-
+const handleSearch = () => { currentPage.value = 1 }
+const handleSort = () => { currentPage.value = 1 }
+const openDiary = (diary) => { selectedDiary.value = diary }
+const closeDiary = () => { selectedDiary.value = null }
 const formatDate = (dateString) => {
   const date = new Date(dateString)
   return date.toLocaleDateString('zh-CN', {
@@ -450,14 +345,11 @@ const formatDate = (dateString) => {
   })
 }
 
-// 生命周期
 onMounted(async () => {
   try {
-    // 获取公开日记
     const res = await axios.post('/userDiary/findPublicDiaries')
     diaries.value = res || []
   } catch (e) {
-    // 若接口失败则用 mock 数据
     diaries.value = mockDiaries
   } finally {
     loading.value = false
@@ -466,22 +358,363 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Standard line-clamp properties for compatibility */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* 背景渐变与整体风格 */
+.diaryground-bg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #74ABE2 0%, #000cb3 100%);
+  font-family: 'Inter', 'Roboto', system-ui, sans-serif;
+  padding-bottom: 60px;
 }
 
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* 顶部标题栏 */
+.header-bar {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 0 18px 0;
+  text-align: center;
+}
+.header-title {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-shadow: 0 2px 12px rgba(80,112,255,0.12);
+}
+.header-title .icon {
+  font-size: 2.5rem;
+}
+.header-desc {
+  color: #e0e7ff;
+  font-size: 1.15rem;
+  margin-top: 8px;
+  letter-spacing: 1px;
 }
 
-/* Custom styles for modal transitions */
+/* 搜索栏居中 */
+.search-bar-center {
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto 32px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.search-bar-inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.95);
+  border-radius: 18px;
+  box-shadow: 0 4px 24px 0 rgba(80, 112, 255, 0.10);
+  padding: 0 18px;
+  position: relative;
+  margin-bottom: 10px;
+}
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1.1rem;
+  padding: 18px 16px 18px 40px;
+  color: #333;
+  border-radius: 18px;
+}
+.search-input::placeholder {
+  color: #b0b8d1;
+}
+.search-icon {
+  position: absolute;
+  left: 16px;
+  font-size: 1.2rem;
+  color: #74ABE2;
+  pointer-events: none;
+}
+.sort-select {
+  margin-left: 18px;
+  border: none;
+  background: #f0f4ff;
+  color: #5563DE;
+  font-size: 1rem;
+  border-radius: 12px;
+  padding: 8px 18px;
+  outline: none;
+  font-weight: 600;
+  box-shadow: 0 1px 6px #a5b4fc22;
+  transition: background 0.2s;
+}
+.sort-select:focus {
+  background: #e0e7ff;
+}
+.search-result-info {
+  color: #fff;
+  font-size: 1.08rem;
+  margin-top: 2px;
+  text-align: left;
+  width: 100%;
+}
+.highlight {
+  color: #fffb7d;
+  font-weight: bold;
+}
+
+/* 栅格卡片展示 */
+.diary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 18px;
+}
+.diary-card {
+  background: rgba(255,255,255,0.97);
+  border-radius: 18px;
+  box-shadow: 0 6px 24px 0 rgba(80, 112, 255, 0.13);
+  padding: 28px 22px 18px 22px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  min-height: 180px;
+  transition: transform 0.18s, box-shadow 0.18s;
+  border: 1.5px solid #e0e7ff;
+}
+.diary-card:hover {
+  transform: translateY(-4px) scale(1.025);
+  box-shadow: 0 12px 40px 0 rgba(80, 112, 255, 0.18);
+  border-color: #74ABE2;
+}
+.diary-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.diary-title {
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #5563DE;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.diary-public {
+  background: linear-gradient(90deg, #74ABE2 0%, #5563DE 100%);
+  color: #fff;
+  font-size: 0.88rem;
+  border-radius: 10px;
+  padding: 2px 12px;
+  margin-left: 8px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.diary-content-preview {
+  color: #444;
+  font-size: 1rem;
+  margin-bottom: 18px;
+  min-height: 48px;
+  line-height: 1.6;
+  word-break: break-all;
+}
+.diary-card-footer {
+  display: flex;
+  justify-content: space-between;
+  color: #a0aec0;
+  font-size: 0.98rem;
+  margin-top: auto;
+}
+.user-info, .date-info {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  color: #fff;
+  margin-top: 80px;
+}
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 18px;
+}
+.empty-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.empty-desc {
+  font-size: 1.1rem;
+  color: #e0e7ff;
+}
+
+/* 分页 */
+.pagination-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 38px 0 0 0;
+  gap: 6px;
+}
+.pagination-btn {
+  background: linear-gradient(90deg, #74ABE2 0%, #5563DE 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pagination-page {
+  background: #f0f4ff;
+  color: #5563DE;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 2px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.pagination-page.active {
+  background: linear-gradient(90deg, #5563DE 0%, #74ABE2 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px #a5b4fc33;
+}
+.pagination-page.ellipsis {
+  background: transparent;
+  color: #b0b8d1;
+  cursor: default;
+  font-size: 1.1rem;
+  padding: 6px 6px;
+}
+
+/* 加载动画 */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 260px;
+}
+.spinner {
+  border: 4px solid #e0e7ff;
+  border-top: 4px solid #74ABE2;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0);}
+  100% { transform: rotate(360deg);}
+}
+
+/* 弹窗样式 */
+.modal-mask {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  background: rgba(30, 41, 59, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: #fff;
+  border-radius: 18px;
+  max-width: 540px;
+  width: 96vw;
+  box-shadow: 0 12px 40px 0 rgba(80, 112, 255, 0.18);
+  padding: 32px 28px 24px 28px;
+  position: relative;
+  animation: fadein 0.7s cubic-bezier(.68,-0.55,.27,1.55);
+}
+.dashboard-btn-wrapper {
+  position: absolute;         /* 加入绝对定位 */
+  top: 16px;                  /* 距离顶部距离 */
+  left: 16px;                 /* 距离左边距离 */
+  margin-top: 0;              /* 不再需要 margin-top */
+  text-align: left;           /* 不居中 */
+  z-index: 1000;              /* 保证在最上层 */
+}
+
+.dashboard-btn {
+  background: linear-gradient(90deg, #5563DE 0%, #74ABE2 100%);
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 12px 36px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #a5b4fc33;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.dashboard-btn:hover {
+  background: linear-gradient(90deg, #74ABE2 0%, #5563DE 100%);
+  transform: scale(1.04);
+}
+
+@keyframes fadein {
+  0% { opacity: 0; transform: scale(0.96) translateY(40px);}
+  100% { opacity: 1; transform: scale(1) translateY(0);}
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.modal-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #5563DE;
+  flex: 1;
+  margin-right: 16px;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #a0aec0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.modal-close:hover {
+  color: #5563DE;
+}
+.modal-meta {
+  color: #a0aec0;
+  font-size: 1rem;
+  display: flex;
+  gap: 18px;
+  margin-bottom: 18px;
+  align-items: center;
+}
+.modal-body {
+  color: #444;
+  font-size: 1.08rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-top: 10px;
+}
+
+/* 弹窗动画 */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
   transition: opacity 0.3s ease;
@@ -490,30 +723,9 @@ onMounted(async () => {
 .modal-fade-leave-to {
   opacity: 0;
 }
-
 .modal-content-enter-active,
 .modal-content-leave-active {
-  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-}
-.modal-content-enter-from,
-.modal-content-leave-to {
-  transform: translateY(20px) scale(0.95);
-  opacity: 0;
-}
-/* 自定义 modal 进入离开动画 */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
-}
-
-/* modal 内容淡入缩放动画 */
-.modal-content-enter-active,
-.modal-content-leave-active {
-  transition: all 0.4s ease;
+  transition: all 0.4s cubic-bezier(.68,-0.55,.27,1.55);
 }
 .modal-content-enter-from {
   opacity: 0;
@@ -524,57 +736,26 @@ onMounted(async () => {
   transform: scale(1.05);
 }
 
-/* 更柔和的 scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+/* 响应式 */
+@media (max-width: 900px) {
+  .header-bar, .search-bar-center, .diary-grid {
+    max-width: 98vw;
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+  .diary-card {
+    padding: 18px 10px 12px 10px;
+  }
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-}
-
-
-/* Custom style for select arrow */
-select {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.75rem center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-  padding-right: 2.5rem;
-}
-
-.bg-white {
-  background: rgba(255,255,255,0.98) !important;
-}
-.shadow-xl, .shadow-lg {
-  box-shadow: 0 12px 40px 0 rgba(80, 112, 255, 0.18), 0 1.5px 8px 0 rgba(80, 112, 255, 0.08) !important;
-}
-.rounded-xl, .rounded-2xl {
-  border-radius: 18px !important;
-}
-.bg-blue-600 {
-  background: linear-gradient(90deg, #74ABE2 0%, #5563DE 100%) !important;
-}
-.bg-blue-700 {
-  background: linear-gradient(90deg, #5563DE 0%, #74ABE2 100%) !important;
-}
-.border-blue-200, .border-blue-300, .border-blue-400 {
-  border-width: 2px !important;
-}
-button, .btn-login {
-  transition: background 0.3s, transform 0.15s !important;
-}
-button:hover, .btn-login:hover {
-  transform: translateY(-2px) scale(1.03) !important;
-}
-.animated-fadein {
-  animation: fadein 0.8s cubic-bezier(.68,-0.55,.27,1.55);
-}
-@keyframes fadein {
-  0% { opacity: 0; transform: scale(0.96) translateY(40px);}
-  100% { opacity: 1; transform: scale(1) translateY(0);}
+@media (max-width: 600px) {
+  .header-title {
+    font-size: 1.5rem;
+  }
+  .diary-card {
+    min-height: 120px;
+  }
+  .modal-content {
+    padding: 18px 8px 12px 8px;
+  }
 }
 </style>

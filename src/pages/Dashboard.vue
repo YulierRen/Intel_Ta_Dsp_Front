@@ -87,9 +87,25 @@ function gotoFriendList() {
       </div>
     </div>
 
+    <h2 style="
+  color: #00f;
+  position: absolute;
+  top: 0;
+  left: 29%;
+  transform: translateX(-60%);
+  font-size: 30px;
+  font-weight: bold;
+  background: linear-gradient(90deg, #ff0066, #0ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: glow 2s infinite alternate;
+">
+      Ta律，做你想做的
+    </h2>
+
     <!-- 中间日程模块 -->
     <div class="dashboard-main">
-      <Schedule style="width:100%;height:auto;" />
+      <Schedule style="width:100%;height:100%;" />
     </div>
 
     <!-- 右侧推荐日记 -->
@@ -175,8 +191,14 @@ function gotoFriendList() {
   align-items: flex-start;
   justify-content: center;
   padding: 48px 0;
-  min-width: 0;
   z-index: 3;
+  /* 新增：让日程模块宽度100%，去除最大宽度限制 */
+  width: 100%;
+  max-width: none;
+}
+.dashboard-main > * {
+  width: 100%;
+  /* 让Schedule组件自适应填满 */
 }
 .dashboard-recommend {
   width: 320px;
@@ -252,4 +274,5 @@ function gotoFriendList() {
     padding: 8px 0;
   }
 }
+
 </style>

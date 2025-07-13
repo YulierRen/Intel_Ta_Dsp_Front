@@ -21,6 +21,12 @@
         </div>
       </div>
     </header>
+    <!-- 固定回到主板按钮 -->
+    <div class="dashboard-btn-fixed">
+      <button class="dashboard-btn" @click="goToDashboard">
+        回到主板
+      </button>
+    </div>
     <!-- Main Content Container -->
     <div class="main-container">
       <div class="main-content">
@@ -59,11 +65,6 @@
               </select>
             </div>
           </div>
-        </div>
-        <div class="dashboard-btn-wrapper">
-          <button class="dashboard-btn" @click="goToDashboard">
-            回到主板
-          </button>
         </div>
         <!-- Results Info -->
         <div class="results-info">
@@ -934,5 +935,13 @@ onMounted(async () => {
   padding: 1.5rem;
   border: 1px solid #e0e7ff;
   box-shadow: 0 2px 8px #6366f11a;
+}
+
+/* 固定回到主板按钮样式 */
+.dashboard-btn-fixed {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 2000;
 }
 </style>

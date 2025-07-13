@@ -27,6 +27,8 @@
       </div>
     </div>
 
+
+
     <div v-if="selectedEvents.length > 0" class="modal">
       <h3>📅 日程详情</h3>
       <ul>
@@ -112,7 +114,8 @@ onMounted(async () => {
 
 <style scoped>
 .dashboard {
-  max-width: 700px;
+  max-width: 1100px;
+  max-height: 1000px;
   margin: 40px auto;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: rgba(255,255,255,0.98);
@@ -153,8 +156,8 @@ onMounted(async () => {
 }
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(7,1fr);
+  gap: 3px;
 }
 .day-name {
   text-align: center;

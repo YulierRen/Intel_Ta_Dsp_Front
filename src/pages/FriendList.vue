@@ -182,9 +182,9 @@ onMounted(fetchFriends)
 }
 .friend-list-layout {
   display: flex;
-  width: 900px;
-  max-width: 98vw;
-  min-height: 600px;
+  width: 1500px;
+  max-width: 150vw;
+  min-height: 800px;
   background: rgba(255,255,255,0.98);
   border-radius: 24px;
   box-shadow: 0 12px 40px 0 rgba(80, 112, 255, 0.18), 0 1.5px 8px 0 rgba(80, 112, 255, 0.08);

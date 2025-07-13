@@ -47,69 +47,67 @@ function gotoFriendList() {
 </script>
 
 <template>
-  <div class="dashboard-layout">
+  <el-container class="dashboard-layout">
     <!-- 左侧栏 -->
-    <div class="dashboard-sidebar">
-      <div class="sidebar-card top" @click="gotoDiaryGround">
-        <div class="sidebar-icon">📖</div>
-        <div>
-          <div class="sidebar-title">日程广场</div>
-          <div class="sidebar-desc">发现大家的日程与动态</div>
+    <el-aside width="200px" class="dashboard-sidebar">
+      <div class="sidebar-list">
+        <div class="sidebar-card" @click="gotoDiaryGround">
+          <div class="sidebar-icon">📖</div>
+          <div class="sidebar-content">
+            <div class="sidebar-title">日程广场</div>
+            <div class="sidebar-desc">发现大家的日程与动态</div>
+          </div>
         </div>
-      </div>
-      <div class="sidebar-card top" @click="gotoHomePage">
-        <div class="sidebar-icon">📅</div>
-        <div>
-          <div class="sidebar-title">个人主页</div>
-          <div class="sidebar-desc">我的主页</div>
-        </div>
-      </div>
-      <div class="sidebar-card top" @click="gotoDiaryGround">
-        <div class="sidebar-icon">📖</div>
-        <div>
-          <div class="sidebar-title">可扩展选项</div>
-          <div class="sidebar-desc">建设中</div>
-        </div>
-      </div>
-      <div class="sidebar-card top" @click="gotoDiaryGround">
-        <div class="sidebar-icon">📖</div>
-        <div>
-          <div class="sidebar-title">可扩展选项</div>
-          <div class="sidebar-desc">建设中</div>
-        </div>
-      </div>
-      <div class="sidebar-card bottom" @click="gotoFriendList">
-        <div class="sidebar-icon">👥</div>
-        <div>
-          <div class="sidebar-title">朋友们</div>
-          <div class="sidebar-desc">查看好友和互动</div>
-        </div>
-      </div>
-    </div>
 
-    <h2 style="
-  color: #00f;
-  position: absolute;
-  top: 0;
-  left: 29%;
-  transform: translateX(-60%);
-  font-size: 30px;
-  font-weight: bold;
-  background: linear-gradient(90deg, #ff0066, #0ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: glow 2s infinite alternate;
-">
-      Ta律，做你想做的
-    </h2>
+        <div class="sidebar-card" @click="gotoHomePage">
+          <div class="sidebar-icon">📅</div>
+          <div class="sidebar-content">
+            <div class="sidebar-title">个人主页</div>
+            <div class="sidebar-desc">我的主页</div>
+          </div>
+        </div>
+
+        <div class="sidebar-card" @click="gotoDiaryGround">
+          <div class="sidebar-icon">🧩</div>
+          <div class="sidebar-content">
+            <div class="sidebar-title">可扩展选项</div>
+            <div class="sidebar-desc">建设中</div>
+          </div>
+        </div>
+
+        <div class="sidebar-card" @click="gotoDiaryGround">
+          <div class="sidebar-icon">🧩</div>
+          <div class="sidebar-content">
+            <div class="sidebar-title">可扩展选项</div>
+            <div class="sidebar-desc">建设中</div>
+          </div>
+        </div>
+
+        <div class="sidebar-card" @click="gotoFriendList">
+          <div class="sidebar-icon">👥</div>
+          <div class="sidebar-content">
+            <div class="sidebar-title">朋友们</div>
+            <div class="sidebar-desc">查看好友和互动</div>
+          </div>
+        </div>
+      </div>
+    </el-aside>
+
 
     <!-- 中间日程模块 -->
-    <div class="dashboard-main">
-      <Schedule style="width:100%;height:100%;" />
-    </div>
+    <el-main>
+      <el-container>
+        <el-header style="text-align: center; font-size: 12px">
+          日程
+        </el-header>
+        <el-main class="dashboard-main">
+          <Schedule style="width:100%;height:100%;" />
+        </el-main>
+      </el-container>
+    </el-main>
 
     <!-- 右侧推荐日记 -->
-    <div class="dashboard-recommend">
+    <el-aside class="dashboard-recommend">
       <div class="recommend-title">推荐日记</div>
       <div class="recommend-list">
         <div class="recommend-item" v-for="d in recommendedDiaries" :key="d.id">
@@ -121,8 +119,8 @@ function gotoFriendList() {
           <div class="diary-excerpt">{{ d.excerpt }}</div>
         </div>
       </div>
-    </div>
-  </div>
+    </el-aside>
+  </el-container>
 </template>
 
 <style scoped>
@@ -135,8 +133,7 @@ function gotoFriendList() {
   overflow: hidden;
 }
 .dashboard-sidebar {
-  width: 220px;
-  display: flex;
+  width: 300px;
   flex-direction: column;
   gap: 32px;
   padding: 48px 18px 48px 28px;
@@ -144,6 +141,12 @@ function gotoFriendList() {
   box-shadow: 4px 0 24px 0 rgba(80, 112, 255, 0.08);
   z-index: 2;
   justify-content: flex-start;
+}
+.sidebar-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 5vh, 50px);
+  padding-block: clamp(8px, 3vh, 20px);
 }
 .sidebar-card {
   display: flex;
@@ -179,18 +182,17 @@ function gotoFriendList() {
   color: #e0e7ff;
   opacity: 0.85;
 }
-.sidebar-card.top {
-  margin-bottom: 20px;
-}
-.sidebar-card.bottom {
-  margin-top: auto;
+.layout-container-demo .el-header {
+  position: relative;
+  background-color: var(--el-color-primary-light-7);
+  color: var(--el-text-color-primary);
 }
 .dashboard-main {
   flex: 1;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 48px 0;
+  padding: 5px 0;
   z-index: 3;
   /* 新增：让日程模块宽度100%，去除最大宽度限制 */
   width: 100%;
@@ -256,6 +258,7 @@ function gotoFriendList() {
   opacity: 0.92;
   line-height: 1.5;
 }
+
 @media (max-width: 1200px) {
   .dashboard-recommend {
     display: none;
@@ -271,7 +274,7 @@ function gotoFriendList() {
 }
 @media (max-width: 600px) {
   .dashboard-main {
-    padding: 8px 0;
+    padding: 12px 0;
   }
 }
 

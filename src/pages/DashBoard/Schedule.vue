@@ -1,31 +1,42 @@
 <template>
-  <div
+  <el-container
       class="dashboard"
       :style="{ width: width, height: height, position: 'relative' }"
   >
-    <div class="dashboard-header">
-      <button @click="prevMonth">《</button>
+    <el-header class="dashboard-header">
+      <el-button @click="prevMonth">《</el-button>
       <span>{{ year }} 年 {{ month + 1 }} 月</span>
-      <button @click="nextMonth">》</button>
-    </div>
-
-    <div class="dashboard-grid">
+      <el-button @click="nextMonth">》</el-button>
+    </el-header>
+    <td class="line">
+      <div />
+    </td>
+    <el-main class="dashboard-grid">
       <div class="day-name" v-for="day in dayNames" :key="day">{{ day }}</div>
 
       <div v-for="n in firstDayOfMonth" :key="'empty' + n" class="empty-day"></div>
 
-      <div
+      <el-popover
+          :width="300"
           v-for="date in daysInMonth"
           :key="date"
           class="day-cell"
           @click="showDetails(date)"
+          placement="right-end"
       >
-        <div class="date-number">{{ date }}</div>
-        <div class="event" v-for="e in getEventsForDate(date)" :key="e.id">
-          {{ e.title }}
-        </div>
-      </div>
-    </div>
+        <template #reference>
+          <div class="day-cell">
+            <div class="date-number">{{ date }}</div>
+            <div class="event" v-for="e in getEventsForDate(date)" :key="e.id">
+              {{ e.title }}
+            </div>
+          </div>
+        </template>
+        <template #default>
+          <div>{{date}}</div>
+        </template>
+      </el-popover>
+    </el-main>
 
 
 
@@ -41,7 +52,7 @@
       </ul>
       <button @click="selectedEvents = []">关闭</button>
     </div>
-  </div>
+  </el-container>
 </template>
 
 <script setup>
@@ -123,6 +134,11 @@ onMounted(async () => {
   box-shadow: 0 12px 40px 0 rgba(80, 112, 255, 0.18), 0 1.5px 8px 0 rgba(80, 112, 255, 0.08);
   padding: 32px 24px 24px 24px;
   animation: card-pop 0.8s cubic-bezier(.68,-0.55,.27,1.55);
+}
+.dashboard .line div {
+  width: 100%;
+  height: 0;
+  border-top: 2px solid var(--el-border-color);
 }
 @keyframes card-pop {
   0% { transform: scale(0.96) translateY(40px); opacity: 0; }

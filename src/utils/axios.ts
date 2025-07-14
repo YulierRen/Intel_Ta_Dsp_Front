@@ -3,7 +3,7 @@ import axios from 'axios'
 // 创建实例
 const instance = axios.create({
     baseURL: '/api', // 会被 Vite 的代理拦到后端
-    timeout: 5000
+    timeout: 60000
 })
 
 // ✅ 请求拦截器：统一加 token

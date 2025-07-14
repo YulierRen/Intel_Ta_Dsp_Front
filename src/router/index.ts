@@ -5,7 +5,8 @@ import Dashboard from "../pages/Dashboard.vue"
 import Homepage from "../pages/Homepage.vue";
 import DiaryGround from "../pages/DiaryGround.vue";
 import FriendList from "../pages/FriendList.vue"
-import UserManage from "../pages/UserManage.vue"; // 新增引入
+import UserManage from "../pages/UserManage.vue";
+import Test from "../pages/test.vue"; // 新增引入
 
 
 const router = createRouter({
@@ -58,9 +59,15 @@ const router = createRouter({
             component: () => import('../pages/NotFound.vue')
         },
         {
+            path: "/test",
+            meta: {title: "测试页面"},
+            component: Test
+        },
+        {
             path: "/:pathMatch(.*)",
             redirect: '/404NotFound'
         }
+
 
     ]
 })

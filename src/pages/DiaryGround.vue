@@ -171,7 +171,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { Search, User, Calendar, Globe, BookOpen, ChevronLeft, ChevronRight, X } from 'lucide-vue-next'
-import axios from 'axios'
+import axios from '@/utils/axios'
 import { useRouter } from 'vue-router'
 
 // 响应式数据

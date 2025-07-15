@@ -263,31 +263,7 @@ async function generateSchedule() {
 .recommend-item:hover {
   box-shadow: 0 6px 24px #a5b4fc33;
 }
-.diary-title {
-  font-size: 1.08rem;
-  font-weight: 600;
-  color: #5563DE;
-  margin-bottom: 6px;
-}
-.diary-meta {
-  font-size: 0.95rem;
-  color: #888;
-  margin-bottom: 7px;
-  display: flex;
-  gap: 12px;
-}
-.diary-author {
-  color: #74ABE2;
-}
-.diary-date {
-  color: #b0b8e6;
-}
-.diary-excerpt {
-  font-size: 0.98rem;
-  color: #333;
-  opacity: 0.92;
-  line-height: 1.5;
-}
+
 .filter-container {
   display: flex;
   gap: 20px;
@@ -311,8 +287,8 @@ input[type="date"] {
 }
 .dashboard-ai-bar {
   position: absolute;
-  top: 20px;         /* 👈 控制纵坐标：距离父元素顶部 50px */
-  left: 39.4%;         /* 👈 水平居中 */
+  top: 750px;         /* 👈 控制纵坐标：距离父元素顶部 */
+  left: 37%;         /* 👈 水平居中 */
   transform: translateX(-50%); /* 👈 修正 left:50% 的居中偏移 */
   display: flex;
   align-items: center;

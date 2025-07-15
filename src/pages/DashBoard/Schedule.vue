@@ -26,12 +26,13 @@
       <div class="right-panel" v-if="selectedDay !== null">
         <div class="right-panel-title">
           <span>{{ year }}-{{ (month+1).toString().padStart(2,'0') }}-{{ selectedDay.toString().padStart(2,'0') }} 日程</span>
+          <button class="add-btn" @click="openAddModal">＋ 添加</button>
         </div>
         <div v-if="sortedEvents.length === 0" class="no-events">
           这一天暂无日程
         </div>
         <ul v-else class="event-list">
-          <li v-for="e in sortedEvents" :key="e.id" class="event-item">
+          <li v-for="e in sortedEvents" :key="e.id" class="event-item" @click.stop="openEditModal(e)">
             <div class="event-time">
               {{ formatTime(e.startTime) }} - {{ formatTime(e.endTime) }}
             </div>
@@ -41,13 +42,57 @@
           </li>
         </ul>
       </div>
+      <el-button class="diary-fab">日　记</el-button>
     </div>
-  </div>
+
+    <!-- 弹窗：新增/编辑日程 -->
+    <div v-if="showModal" class="custom-modal-mask">
+      <div class="custom-modal-content">
+        <h3>{{ modalMode === 'add' ? '添加日程' : '编辑/删除日程' }}</h3>
+        <form @submit.prevent="handleSubmit">
+          <div class="modal-field">
+            <label>标题</label>
+            <input v-model="modalForm.title" required maxlength="30" />
+          </div>
+          <div class="modal-field">
+            <label>描述</label>
+            <textarea v-model="modalForm.description" maxlength="100" />
+          </div>
+          <div class="modal-field">
+            <label>开始时间</label>
+            <input v-model="modalForm.startTime" type="datetime-local" required />
+          </div>
+          <div class="modal-field">
+            <label>结束时间</label>
+            <input v-model="modalForm.endTime" type="datetime-local" required />
+          </div>
+          <div class="modal-field">
+            <label>地点</label>
+            <input v-model="modalForm.location" maxlength="30" />
+          </div>
+          <div class="modal-actions">
+            <button type="submit" class="modal-btn confirm">
+              {{ modalMode === 'add' ? '添加' : '保存修改' }}
+            </button>
+            <button type="button" class="modal-btn" @click="closeModal">取消</button>
+            <button
+              v-if="modalMode === 'edit'"
+              type="button"
+              class="modal-btn danger"
+              @click="handleDelete"
+            >删除</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>>
+
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, reactive, watch } from 'vue'
 import axios from '@/utils/axios.js'
+import '/home/yulierren/桌面/kebiao_front/src/assets/css/diarybutton.css'
 
 const dayNames = ['日', '一', '二', '三', '四', '五', '六']
 
@@ -81,7 +126,41 @@ function showDetails(day) {
   selectedDay.value = day
 }
 
+// 工具：将本地 datetime-local 字符串转为中国东八区 Date 对象
+function toChinaDate(localDateTimeStr) {
+  // localDateTimeStr: '2024-06-09T08:00'
+  // 直接 new Date 会自动按本地时区解析
+  return new Date(localDateTimeStr)
+}
+
+// 工具：将后端返回的时间（Date/ISO字符串/时间戳）转为 'yyyy-MM-ddTHH:mm' 格式（适配 input[type="datetime-local"]）
+function toInputDateTimeStr(dateInput) {
+  if (!dateInput) return ''
+  const date = typeof dateInput === 'string' || typeof dateInput === 'number'
+    ? new Date(dateInput)
+    : dateInput
+  // 补齐本地时区
+  const y = date.getFullYear()
+  const m = (date.getMonth() + 1).toString().padStart(2, '0')
+  const d = date.getDate().toString().padStart(2, '0')
+  const h = date.getHours().toString().padStart(2, '0')
+  const min = date.getMinutes().toString().padStart(2, '0')
+  return `${y}-${m}-${d}T${h}:${min}`
+}
+
+function formatDateTimeString(dateInput) {
+  if (!dateInput) return ''
+  const date = new Date(dateInput)
+  const y = date.getFullYear()
+  const m = (date.getMonth() + 1).toString().padStart(2, '0')
+  const d = date.getDate().toString().padStart(2, '0')
+  const h = date.getHours().toString().padStart(2, '0')
+  const min = date.getMinutes().toString().padStart(2, '0')
+  return `${y}-${m}-${d} ${h}:${min}`
+}
+
 function formatTime(iso) {
+  // 返回 'HH:mm'，如需完整日期可用 formatDateTimeString
   const date = new Date(iso)
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
@@ -93,7 +172,7 @@ function prevMonth() {
   } else {
     month.value--
   }
-  selectedDay.value = null
+  // 保持 selectedDay 不变
 }
 
 function nextMonth() {
@@ -103,7 +182,7 @@ function nextMonth() {
   } else {
     month.value++
   }
-  selectedDay.value = null
+  // 保持 selectedDay 不变
 }
 async function loadSchedule() {
   try {
@@ -130,22 +209,24 @@ const sortedEvents = computed(() => {
   return events.slice().sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
 })
 
-// 颜色梯度：0件=无色，1-2件=浅蓝，3-4件=深蓝，5-6件=紫，7-8件=橙，9+件=金色
+// 颜色梯度：0件=无色，1件=淡绿色，2件=天蓝色，3件=海蓝色，4件=黄色，5件=红色，5件以上=紫色
 function getCellStyle(day) {
   const count = getEventsForDate(day).length
   let bg = ''
   if (count === 0) {
     bg = '#f7faff'
-  } else if (count <= 2) {
-    bg = 'linear-gradient(135deg, #b3e0ff 0%, #74ABE2 100%)'
-  } else if (count <= 4) {
-    bg = 'linear-gradient(135deg, #74ABE2 0%, #5563DE 100%)'
-  } else if (count <= 6) {
-    bg = 'linear-gradient(135deg, #7f7fd5 0%, #5563DE 100%)'
-  } else if (count <= 8) {
-    bg = 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)'
+  } else if (count === 1) {
+    bg = 'linear-gradient(135deg, #d0f5e8 0%, #a8e6cf 100%)' // 淡绿色
+  } else if (count === 2) {
+    bg = 'linear-gradient(135deg, #b3e0ff 0%, #74ABE2 100%)' // 天蓝色
+  } else if (count === 3) {
+    bg = 'linear-gradient(135deg, #4fc3f7 0%, #0288d1 100%)' // 海蓝色
+  } else if (count === 4) {
+    bg = 'linear-gradient(135deg, #fff9c4 0%, #ffe066 100%)' // 黄色
+  } else if (count === 5) {
+    bg = 'linear-gradient(135deg, #ffb3b3 0%, #ff5252 100%)' // 红色
   } else {
-    bg = 'linear-gradient(135deg, #ffd200 0%, #ffb347 100%)'
+    bg = 'linear-gradient(135deg, #b39ddb 0%, #7c4dff 100%)' // 紫色
   }
   return {
     background: bg,
@@ -153,8 +234,132 @@ function getCellStyle(day) {
   }
 }
 
+// 新增：添加日程
+async function addSchedule(schedule) {
+  try {
+    const res = await axios.post('/schedule/add', schedule)
+    await loadSchedule()
+    return res
+  } catch (err) {
+    console.error('添加日程失败', err)
+    throw err
+  }
+}
+
+// 新增：更新日程
+async function updateSchedule(schedule) {
+  try {
+    const res = await axios.put('/schedule/update', schedule)
+    await loadSchedule()
+    return res
+  } catch (err) {
+    console.error('更新日程失败', err)
+    throw err
+  }
+}
+
+// 新增：删除日程
+async function deleteSchedule(id) {
+  try {
+    const res = await axios.delete(`/schedule/delete/${id}`)
+    await loadSchedule()
+    return res
+  } catch (err) {
+    console.error('删除日程失败', err)
+    throw err
+  }
+}
+
+// 弹窗相关
+const showModal = ref(false)
+const modalMode = ref('add') // 'add' or 'edit'
+const modalForm = reactive({
+  id: null,
+  title: '',
+  description: '',
+  startTime: '',
+  endTime: '',
+  location: ''
+})
+
+// 打开添加弹窗
+function openAddModal() {
+  modalMode.value = 'add'
+  modalForm.id = null
+  modalForm.title = ''
+  modalForm.description = ''
+  // 默认填充为当前选中日期的08:00-09:00，避免时区问题
+  const y = year.value
+  const m = (month.value + 1).toString().padStart(2, '0')
+  const d = selectedDay.value.toString().padStart(2, '0')
+  modalForm.startTime = `${y}-${m}-${d}T08:00`
+  modalForm.endTime = `${y}-${m}-${d}T09:00`
+  modalForm.location = ''
+  showModal.value = true
+}
+
+// 打开编辑弹窗
+function openEditModal(event) {
+  modalMode.value = 'edit'
+  modalForm.id = event.id
+  modalForm.title = event.title
+  modalForm.description = event.description
+  // 兼容后端返回为 Date/ISO/时间戳，适配 input[type="datetime-local"]
+  modalForm.startTime = toInputDateTimeStr(event.startTime)
+  modalForm.endTime = toInputDateTimeStr(event.endTime)
+  modalForm.location = event.location
+  showModal.value = true
+}
+
+// 关闭弹窗
+function closeModal() {
+  showModal.value = false
+}
+
+// 提交表单
+async function handleSubmit() {
+  try {
+    if (modalMode.value === 'add') {
+      const studentId = localStorage.getItem('studentId')
+      await addSchedule({
+        ...modalForm,
+        userId: Number(studentId),
+        startTime: toChinaDate(modalForm.startTime),
+        endTime: toChinaDate(modalForm.endTime)
+      })
+    } else if (modalMode.value === 'edit') {
+      await updateSchedule({
+        ...modalForm,
+        startTime: toChinaDate(modalForm.startTime),
+        endTime: toChinaDate(modalForm.endTime)
+      })
+    }
+    showModal.value = false
+    await loadSchedule()
+  } catch (e) {
+    alert('操作失败')
+  }
+}
+
+// 删除
+async function handleDelete() {
+  if (modalForm.id && confirm('确定要删除该日程吗？')) {
+    try {
+      await deleteSchedule(modalForm.id)
+      showModal.value = false
+      await loadSchedule()
+    } catch (e) {
+      alert('删除失败')
+    }
+  }
+}
+
+
 defineExpose({
-  loadSchedule
+  loadSchedule,
+  addSchedule,
+  updateSchedule,
+  deleteSchedule
 })
 
 </script>
@@ -208,8 +413,8 @@ defineExpose({
 }
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(7,1fr);
-  gap: 3px;
+  grid-template-columns: repeat(7,10fr);
+  gap: 10px;
   flex: 1;
   min-width: 600px;
 }
@@ -253,7 +458,8 @@ defineExpose({
 }
 .right-panel {
   width: 340px;
-  min-height: 400px;
+  min-height: 500px;
+  max-height: 600px;
   background: linear-gradient(135deg, #f7faff 0%, #e0e7ff 100%);
   border-radius: 16px;
   box-shadow: 0 2px 16px #a5b4fc22;
@@ -261,6 +467,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   animation: fadein 0.5s;
+  overflow: hidden;
 }
 @keyframes fadein {
   0% { opacity: 0; transform: scale(0.96) translateY(40px);}
@@ -273,13 +480,28 @@ defineExpose({
   margin-bottom: 18px;
   letter-spacing: 1px;
   text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-.no-events {
-  color: #aaa;
-  font-size: 1.05rem;
-  text-align: center;
-  margin-top: 40px;
+.add-btn {
+  background: linear-gradient(90deg, #74ABE2 0%, #5563DE 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background 0.2s, transform 0.15s;
 }
+.add-btn:hover {
+  background: linear-gradient(90deg, #5563DE 0%, #74ABE2 100%);
+  transform: scale(1.04);
+}
+
+/* 日程列表滚动与更明显样式 */
 .event-list {
   list-style: none;
   padding: 0;
@@ -287,47 +509,184 @@ defineExpose({
   display: flex;
   flex-direction: column;
   gap: 18px;
+  overflow-y: auto;
+  max-height: 420px;
+  scrollbar-width: thin;
+  scrollbar-color: #74ABE2 #e0e7ff;
 }
+.event-list::-webkit-scrollbar {
+  width: 8px;
+}
+.event-list::-webkit-scrollbar-thumb {
+  background: #74ABE2;
+  border-radius: 6px;
+}
+.event-list::-webkit-scrollbar-track {
+  background: #e0e7ff;
+  border-radius: 6px;
+}
+
 .event-item {
-  background: linear-gradient(90deg, #74ABE2 0%, #e0e7ff 100%);
+  background: linear-gradient(90deg, #fff 0%, #74ABE2 100%);
+  border-left: 6px solid #ffffff;
   border-radius: 12px;
-  padding: 14px 14px 10px 14px;
-  box-shadow: 0 2px 8px #a5b4fc22;
+  padding: 16px 16px 12px 18px;
+  box-shadow: 0 4px 16px #a5b4fc33;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  transition: box-shadow 0.2s;
+  gap: 6px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  cursor: pointer;
+  position: relative;
 }
 .event-item:hover {
-  box-shadow: 0 6px 24px #a5b4fc33;
+  box-shadow: 0 8px 32px #a5b4fc55;
+  border-left-color: #74ABE2;
+  background: linear-gradient(90deg, #ffffff 0%, #74ABE2 100%);
 }
 .event-title {
-  font-size: 1.08rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: #5563DE;
+  margin-bottom: 2px;
+  letter-spacing: 0.5px;
 }
 .event-time {
-  font-size: 0.98rem;
-  color: #74ABE2;
-  font-weight: 500;
+  font-size: 1.02rem;
+  color: #059669;
+  font-weight: 600;
+  margin-bottom: 2px;
 }
 .event-desc {
-  font-size: 0.98rem;
+  font-size: 1.01rem;
   color: #333;
-  opacity: 0.92;
+  opacity: 0.95;
   line-height: 1.5;
 }
 .event-location {
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   color: #b0b8e6;
+  margin-top: 2px;
 }
-@media (max-width: 1200px) {
-  .right-panel {
-    display: none;
-  }
-  .dashboard-content {
-    gap: 0;
-  }
+.no-events {
+  text-align: center;
+  color: #999;
+  font-size: 1rem;
+  padding: 40px 0;
+  flex: 1;
 }
+
+/* 自定义弹窗样式 */
+.custom-modal-mask {
+  position: fixed;
+  z-index: 9999;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(80,112,255,0.13);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.custom-modal-content {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(80, 112, 255, 0.18);
+  padding: 38px 38px 22px 38px;
+  min-width: 350px;
+  max-width: 98vw;
+  animation: fadein 0.3s;
+  border: 2px solid #74ABE2;
+  position: relative;
+}
+.custom-modal-content h3 {
+  color: #5563DE;
+  margin-bottom: 22px;
+  font-size: 22px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+.modal-field {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.modal-field label {
+  font-size: 1rem;
+  color: #5563DE;
+  font-weight: 500;
+}
+.modal-field input,
+.modal-field textarea {
+  border: 1.5px solid #a5b4fc;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  background: #f7faff;
+  transition: border 0.2s;
+}
+.modal-field input:focus,
+.modal-field textarea:focus {
+  border-color: #74ABE2;
+  outline: none;
+}
+.modal-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.modal-btn {
+  background: #e0e7ff;
+  color: #5563DE;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.modal-btn.confirm {
+  background: linear-gradient(90deg, #74ABE2 0%, #5563DE 100%);
+  color: #fff;
+}
+.modal-btn.danger {
+  background: linear-gradient(90deg, #ff5252 0%, #ffb3b3 100%);
+  color: #fff;
+}
+.modal-btn:hover {
+  filter: brightness(1.08);
+}
+.diary-fab {
+  position: fixed;
+  bottom: 45px;
+  right: 34px;
+  width: 382px;
+  height: 150px;
+  font-size: 60px;
+  font-weight: bold;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #6a85b6, #bac8e0);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.diary-fab:hover {
+  background: linear-gradient(135deg, #4f71a3, #a2bce8);
+  color: #0065b3;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* ✅ 点击时：颜色变深 + 轻微缩放 + 下沉 */
+.diary-fab:active {
+  background: linear-gradient(135deg, #3b5c99, #8ba8d6);
+  transform: scale(0.96) translateY(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  color: #004b91;
+}
+
 </style>
+
 

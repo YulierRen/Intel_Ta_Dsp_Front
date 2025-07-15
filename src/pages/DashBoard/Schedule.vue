@@ -659,11 +659,11 @@ defineExpose({
 }
 .diary-fab {
   position: fixed;
-  bottom: 45px;
+  bottom: 30px;
   right: 34px;
   width: 382px;
-  height: 150px;
-  font-size: 60px;
+  height: 100px;
+  font-size: 40px;
   font-weight: bold;
   border-radius: 24px;
   background: linear-gradient(135deg, #6a85b6, #bac8e0);

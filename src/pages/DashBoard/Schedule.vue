@@ -41,8 +41,9 @@
             <div class="event-location">📍{{ e.location }}</div>
           </li>
         </ul>
+        <!-- 日记按钮，点击唤起DayNote弹窗，传递当前右侧日期 -->
+        <el-button class="diary-fab" @click="openDiaryModal">日　记</el-button>
       </div>
-      <el-button class="diary-fab">日　记</el-button>
     </div>
 
     <!-- 弹窗：新增/编辑日程 -->
@@ -53,6 +54,13 @@
           <div class="modal-field">
             <label>标题</label>
             <input v-model="modalForm.title" required maxlength="30" />
+          </div>
+          <div class="modal-field">
+            <label>完成情况</label>
+            <el-radio-group v-model="modalForm.isCompleted">
+              <el-radio :label="true">已完成</el-radio>
+              <el-radio :label="false">未完成</el-radio>
+            </el-radio-group>
           </div>
           <div class="modal-field">
             <label>描述</label>
@@ -85,6 +93,13 @@
         </form>
       </div>
     </div>
+
+    <!-- DayNote弹窗，传递当前右侧日程日期 -->
+    <DayNote
+      v-if="showDiaryModal"
+      :date="rightPanelDate"
+      @close="showDiaryModal = false"
+    />
   </div>>
 
 </template>
@@ -92,7 +107,7 @@
 <script setup>
 import { ref, computed, onMounted, reactive, watch } from 'vue'
 import axios from '@/utils/axios.js'
-import '/home/yulierren/桌面/kebiao_front/src/assets/css/diarybutton.css'
+import DayNote from './DayNote.vue'
 
 const dayNames = ['日', '一', '二', '三', '四', '五', '六']
 
@@ -279,7 +294,8 @@ const modalForm = reactive({
   description: '',
   startTime: '',
   endTime: '',
-  location: ''
+  location: '',
+  isCompleted: false
 })
 
 // 打开添加弹窗
@@ -354,6 +370,19 @@ async function handleDelete() {
   }
 }
 
+const showDiaryModal = ref(false)
+const rightPanelDate = computed(() => {
+  const y = year.value
+  const m = (month.value + 1).toString().padStart(2, '0')
+  const d = selectedDay.value ? selectedDay.value.toString().padStart(2, '0') : ''
+  return y && m && d ? `${y}-${m}-${d}` : ''
+})
+
+// 打开日记弹窗
+function openDiaryModal() {
+  console.log("点了")
+  showDiaryModal.value = true
+}
 
 defineExpose({
   loadSchedule,

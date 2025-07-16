@@ -7,7 +7,7 @@ import DiaryGround from "../pages/DiaryGround.vue";
 import FriendList from "../pages/FriendList.vue"
 import UserManage from "../pages/UserManage.vue";
 import Test from "../pages/test.vue"; // 新增引入
-
+import DayNote from "../pages/DashBoard/DayNote.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -64,11 +64,13 @@ const router = createRouter({
             component: Test
         },
         {
+            path:"/daynote",
+            component:DayNote
+        },
+        {
             path: "/:pathMatch(.*)",
             redirect: '/404NotFound'
         }
-
-
     ]
 })
 

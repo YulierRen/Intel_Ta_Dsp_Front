@@ -21,7 +21,7 @@
         <div class="user-info">
           <h1 class="nickname">{{ user.nickname }}</h1>
           <p class="user-detail">性别：{{ user.gender }}</p>
-          <p class="user-detail">年龄：{{ user.age }}岁</p>
+          <p class="user-detail">生日：{{ user.birthday }}</p>
           <p class="bio">{{ user.bio }}</p>
         </div>
       </div>
@@ -113,7 +113,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import axios from '@/utils/axios'
 import { useRouter } from 'vue-router'

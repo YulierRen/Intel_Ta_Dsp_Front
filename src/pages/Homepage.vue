@@ -28,8 +28,8 @@
       <!-- 右侧内容卡片 -->
       <div class="main-card">
         <div class="main-card-header">
-          <h2 class="main-title">我的旅行日记</h2>
-          <button @click="openAddDiaryModal" class="add-diary-btn">新增旅行日记</button>
+          <h2 class="main-title">我的过去</h2>
+          <button @click="openAddDiaryModal" class="add-diary-btn">点我让deepseek总结你的收获</button>
         </div>
         <!-- 搜索区域 -->
         <div class="search-bar">
@@ -51,9 +51,9 @@
               :key="diary.id"
               @click="viewDiaryDetail(diary.id)"
             >
-              <div class="diary-date">{{ diary.date }}</div>
               <h3 class="diary-title">{{ diary.title }}</h3>
               <p class="diary-excerpt">{{ diary.excerpt }}</p>
+              <button v-if="!diary.isPublic" @click.stop="changeVisible(diary.id)" class="public-btn">公开</button>
               <button @click.stop="deleteDiary(diary.id)" class="delete-btn">删除</button>
             </li>
           </ul>
@@ -69,7 +69,7 @@
       <div class="modal">
         <div class="modal-content">
           <div class="modal-header">
-            <h2>新增旅行日记</h2>
+            <h2>这段时间内你的收获</h2>
             <button class="close-btn" @click="closeAddDiaryModal">&times;</button>
           </div>
           <form @submit.prevent="addDiary" class="diary-form">
@@ -84,12 +84,21 @@
               />
             </div>
             <div class="form-group">
-              <label for="diary-date">日期</label>
+              <label for="diary-date">开始时间</label>
               <input
                 id="diary-date"
                 v-model="newDiary.date"
                 type="date"
                 required
+              />
+            </div>
+            <div class="form-group">
+              <label for="diary-date">结束时间</label>
+              <input
+                  id="diary-date"
+                  v-model="newDiary.enddate"
+                  type="date"
+                  required
               />
             </div>
             <div class="form-group">
@@ -104,20 +113,54 @@
             </div>
             <div class="form-actions">
               <button type="button" @click="closeAddDiaryModal" class="cancel-btn">取消</button>
-              <button type="submit" class="submit-btn">保存</button>
+              <button type="button" @click="generateAiDiary" class="submit-btn">DeepSeek  GOGOGO</button>
             </div>
           </form>
         </div>
       </div>
     </div>
+    <el-dialog
+        v-model="showDiaryDialog"
+        title="AI 生成的日记"
+        width="50%"
+        :close-on-click-modal="false"
+        custom-class="custom-dialog-style"
+    >
+      <el-input
+          type="textarea"
+          v-model="aiDiaryContent"
+          :placeholder="reasoningContent"
+          rows="10"
+          class="custom-textarea"
+      />
+
+      <template #footer>
+        <div class="footer-wrapper">
+          <el-button v-if="save" type="primary" class="save-button"  @click="saveDiary">
+            保存
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
+
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import axios from '@/utils/axios'
+import axios from "../utils/axios"
+import { ElMessage } from 'element-plus'
+import 'element-plus/dist/index.css'
 import { useRouter } from 'vue-router'
 const router = useRouter()
+
+
+//aidiary弹窗
+const showDiaryDialog = ref(false) // 控制弹窗显示
+const save = ref(false)
+const reasoningContent = ref(''); //思考过程
+const aiDiaryContent = ref('') // 存放生成的日记内容
+
 
 const user = ref({
   avatarUrl: '',
@@ -131,9 +174,9 @@ const diaries = ref([])
 const searchTerm = ref('')
 const isAddDiaryModalVisible = ref(false)
 const newDiary = ref({
-  title: '',
-  content: '',
-  date: new Date().toISOString().split('T')[0]
+  title:"",
+  startdate: new Date().toISOString().split('T')[0],
+  enddate: new Date().toISOString().split('T')[0],
 })
 
 const filteredDiaries = computed(() => {
@@ -167,7 +210,8 @@ const fetchData = async () => {
       date: d.createdAt ? formatDate(d.createdAt) : '未知日期',
       title: d.title,
       content: d.content || '',
-      excerpt: d.content ? d.content.slice(0, 60) + (d.content.length > 60 ? '...' : '') : ''
+      excerpt: d.content ? d.content.slice(0, 60) + (d.content.length > 60 ? '...' : '') : '',
+      isPublic: d.isPublic
     }))
   } catch (error) {
     // ...异常处理...
@@ -186,19 +230,132 @@ const formatDate = (dateString) => {
 onMounted(fetchData)
 const searchDiaries = () => {}
 const viewDiaryDetail = (id) => {
+  console.log(id)
   router.push(`/diary/${id}`)
 }
 const openAddDiaryModal = () => {
   isAddDiaryModalVisible.value = true
   newDiary.value = {
-    title: '',
-    content: '',
-    date: new Date().toISOString().split('T')[0]
+    title:newDiary.value.title,
+    startdate: new Date().toISOString().split('T')[0],
+    enddate: new Date().toISOString().split('T')[0]
   }
 }
 const closeAddDiaryModal = () => {
   isAddDiaryModalVisible.value = false
 }
+const generateDiaryStream = async () => {
+  try {
+    showDiaryDialog.value = true;
+    aiDiaryContent.value = '';      // 最终AI内容
+    reasoningContent.value = '';    // 思考过程
+
+    const userId = localStorage.getItem('studentId');
+    const token = localStorage.getItem('token');
+
+    const params = new URLSearchParams({
+      userId: userId || '',
+      startdate: newDiary.value.startdate,
+      enddate: newDiary.value.enddate,
+    });
+
+    const response = await fetch(`/api/diary/generateDiaryStream?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'text/event-stream',
+      }
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error(`请求失败，状态码: ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+
+    // 缓存本次事件数据
+    let eventName = '';
+    let dataBuffer = '';
+
+    async function readStream() {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          console.log('流读取完毕');
+          break;
+        }
+
+        const chunk = decoder.decode(value, { stream: true });
+        // 按行分割，因为SSE是逐行发送的
+        const lines = chunk.split(/\r?\n/);
+
+        for (const line of lines) {
+          if (line.startsWith('event:')) {
+            eventName = line.replace(/^event:\s*/, '').trim();
+          } else if (line.startsWith('data:')) {
+            const data = line.replace(/^data:\s*/, '');
+            dataBuffer += data;
+          } else if (line === '') {
+            // 空行表示一个事件结束，处理缓存数据
+            if (eventName === 'content') {
+              aiDiaryContent.value += dataBuffer;
+            } else if (eventName === '' || eventName === 'message') {
+              // 默认事件，没有event:行时eventName是空，说明是默认消息，放reasoningContent
+              reasoningContent.value += dataBuffer;
+            }
+            // 清空缓存
+            eventName = '';
+            dataBuffer = '';
+          }
+        }
+      }
+    }
+
+    await readStream();
+    save.value=true
+
+  } catch (error) {
+    console.error('流式生成日记失败:', error);
+    aiDiaryContent.value += '\n[错误] 无法生成日记';
+  }
+};
+const generateAiDiary = () => {
+  generateDiaryStream();
+};
+const saveDiary = async () => {
+  const userId = localStorage.getItem('studentId');
+  const diaryData = {
+    userId: userId,
+    title: newDiary.value.title,
+    content: aiDiaryContent.value,
+    isPublic: false,
+    id: null
+  }
+
+  try {
+    const response = await axios.post('/userDiary/create', diaryData)
+    console.log('创建成功:', response.data)
+
+    ElMessage({
+      message: '日记创建成功！',
+      type: 'success',
+      duration: 2000, // 让用户看到提示
+      onClose: () => {
+        location.reload() // ✅ 成功提示结束后刷新页面
+      }
+    })
+  } catch (error) {
+    console.error('创建失败:', error)
+
+    ElMessage({
+      message: '日记创建失败，请重试',
+      type: 'error',
+      duration: 3000,
+    })
+  }
+}
+
 const addDiary = async () => {
   try {
     const studentId = localStorage.getItem('studentId')
@@ -221,7 +378,9 @@ const addDiary = async () => {
 const deleteDiary = async (id) => {
   if (!confirm('确定要删除这篇日记吗？')) return
   try {
-    await axios.delete(`/userDiary/delete/${id}`)
+    await axios.post('/userDiary/delete', null, {
+      params: { id: id }
+    })
     diaries.value = diaries.value.filter(diary => diary.id !== id)
   } catch (error) {
     alert('删除日记失败，请重试')
@@ -230,6 +389,35 @@ const deleteDiary = async (id) => {
 </script>
 
 <style scoped>
+.custom-dialog-style {
+  border-radius: 18px;
+  background: #f0f6ff;
+  box-shadow: 0 8px 24px rgba(0, 128, 255, 0.15);
+  padding: 20px;
+}
+
+.custom-textarea {
+  font-size: 18px;
+  border-radius: 14px;
+  background-color: #f9fbff;
+  padding: 12px;
+  border: 1px solid #c6dafc;
+  color: #333;
+}
+
+.footer-wrapper {
+  text-align: right;
+  margin-top: 12px;
+}
+
+.save-button {
+  background-color: #409eff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 16px;
+}
 .homepage-bg {
   min-height: 100vh;
   background: linear-gradient(135deg, #74ABE2 0%, #5563DE 100%);
@@ -496,6 +684,25 @@ const deleteDiary = async (id) => {
   background: linear-gradient(90deg, #fca5a5 0%, #f87171 100%);
   transform: translateY(-2px) scale(1.03);
 }
+.public-btn {
+  background: linear-gradient(90deg, #71f8ea 0%, #a5fce5 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 4px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 2px 8px #fca5a533;
+  position: absolute;
+  right: 1.5rem;
+  bottom: 6.0em;
+}
+.public-btn:hover {
+  background: linear-gradient(90deg, #a5abfc 0%, #8171f8 100%);
+  transform: translateY(-2px) scale(1.03);
+}
 .empty-state {
   text-align: center;
   padding: 3rem 0;
@@ -667,5 +874,63 @@ const deleteDiary = async (id) => {
   .main-title {
     font-size: 1.2rem;
   }
+}
+.custom-dialog-style {
+  border-radius: 20px;
+  padding: 20px;
+  background: linear-gradient(to bottom right, #f0faff, #ffffff);
+  box-shadow: 0 8px 30px rgba(90, 160, 255, 0.2);
+}
+
+.custom-dialog-style .el-dialog__header {
+  font-size: 22px;
+  font-weight: bold;
+  color: #3a8ee6;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0efff;
+}
+
+.custom-textarea .el-textarea__inner {
+  font-size: 16px;
+  border-radius: 14px;
+  background-color: #f9fbff;
+  border: 1.5px solid #c8e3ff;
+  padding: 14px;
+  transition: all 0.3s ease;
+}
+
+.custom-textarea .el-textarea__inner:focus {
+  border-color: #6cb7ff;
+  box-shadow: 0 0 6px rgba(108, 183, 255, 0.4);
+}
+
+.footer-wrapper {
+  text-align: right;
+  margin-top: 20px;
+}
+
+.save-button {
+  background: linear-gradient(to right, #6cb7ff, #3a8ee6);
+  border: none;
+  border-radius: 12px;
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  box-shadow: 0 4px 12px rgba(108, 183, 255, 0.3);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.save-button:hover {
+  background: linear-gradient(to right, #3a8ee6, #6cb7ff);
+  box-shadow: 0 6px 16px rgba(60, 160, 255, 0.4);
+}
+.diary-list-container {
+  max-height: 500px; /* 或你想要的高度，比如 70vh */
+  overflow-y: auto;
+  padding-right: 8px; /* 防止滚动条遮住内容 */
+}
+.homepage-bg {
+  overflow: hidden; /* 禁止滚动 */
 }
 </style>

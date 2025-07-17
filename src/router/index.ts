@@ -68,6 +68,11 @@ const router = createRouter({
             component:DayNote
         },
         {
+            path: '/diary/:id',
+            name: 'DiaryDetail',
+            component: () => import('../pages/DiaryDetail.vue')
+        },
+        {
             path: "/:pathMatch(.*)",
             redirect: '/404NotFound'
         }

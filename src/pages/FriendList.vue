@@ -13,7 +13,7 @@
             required
           />
           <button type="submit" class="add-btn" :disabled="adding">
-            {{ adding ? '添加中...' : '添加好友' }}
+            {{ adding ? '添加中...' : '关注ta' }}
           </button>
         </form>
         <div v-if="error" class="error-msg">{{ error }}</div>
@@ -63,6 +63,7 @@
 import { ref, onMounted } from 'vue'
 import axios from '@/utils/axios'
 import { useRouter } from "vue-router"
+
 
 const friends = ref([])
 const loading = ref(false)
@@ -123,7 +124,7 @@ const goToDashboard = () => {
 }
 
 const goToUserHome = (id) => {
-  router.push(`/user/${id}`)
+  router.push(`/homepage/${id}`)
 }
 
 const handleAddFriend = async () => {

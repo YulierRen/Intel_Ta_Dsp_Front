@@ -88,7 +88,9 @@
                 <h3 class="diary-title">{{ diary.title }}</h3>
                 <div class="diary-public">公开</div>
               </div>
-              <p class="diary-content">{{ diary.content }}</p>
+              <p class="diary-content">
+                {{ diary.content.length > 50 ? diary.content.slice(0, 50) + '...' : diary.content }}
+              </p>
               <div class="diary-meta">
                 <div class="diary-meta-user">用户 {{ diary.userId }}</div>
                 <div class="diary-meta-date">{{ formatDate(diary.createdAt) }}</div>
@@ -168,8 +170,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { watch } from 'vue'
 import { Search, User, Calendar, Globe, BookOpen, ChevronLeft, ChevronRight, X } from 'lucide-vue-next'
 import axios from '@/utils/axios'
 import { useRouter } from 'vue-router'
@@ -181,6 +184,9 @@ const sortBy = ref('newest')
 const loading = ref(true)
 const selectedDiary = ref(null)
 const currentPage = ref(1)
+const nickname = ref('')
+const props = defineProps<{ diary: { userId: number | string } }>()
+
 const itemsPerPage = 12
 
 const router = useRouter()

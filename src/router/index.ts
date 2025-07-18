@@ -8,6 +8,7 @@ import FriendList from "../pages/FriendList.vue"
 import UserManage from "../pages/UserManage.vue";
 import Test from "../pages/test.vue"; // 新增引入
 import DayNote from "../pages/DashBoard/DayNote.vue";
+import TaHomepage from "../pages/TaHomepage.vue";
 
 const router = createRouter({
     history: createWebHistory(),
@@ -36,6 +37,10 @@ const router = createRouter({
             path: '/homepage',
             meta: {title: "主页"},
             component: Homepage
+        },
+        {
+            path: '/homepage/:id',
+            component: TaHomepage
         },
         {
             path: '/diaryground',

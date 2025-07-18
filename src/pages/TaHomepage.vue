@@ -24,6 +24,14 @@
           <p class="user-detail">生日：{{ user.birthday }}</p>
           <p class="bio">{{ user.bio }}</p>
         </div>
+        <!-- 当前不是本人 -->
+        <button
+            v-if="!isCurrentUser"
+            class="edit-profile-btn"
+            @click="isFriend ? cancelFriend() : addFriend()"
+        >
+          {{ isFriend ? '已关注' : '关注' }}
+        </button>
 
         <!-- 新增编辑按钮 -->
         <button v-if="isCurrentUser" class="edit-profile-btn" @click="openEditModal">
@@ -119,15 +127,24 @@
                 class="diary-item"
                 v-for="(diary, index) in filteredDiaries"
                 :key="diary.id"
-                @click="viewDiaryDetail(diary.id)"
+                @click="viewDiaryDetail(diary)"
+                v-show="diary.isPublic"
             >
               <h3 class="diary-title">{{ diary.title }}</h3>
               <p class="diary-excerpt">{{ diary.excerpt }}</p>
-              <button v-if="!diary.isPublic" @click.stop="changeVisible(diary.id)" class="public-btn">公开</button>
-              <button @click.stop="deleteDiary(diary.id)" class="delete-btn">删除</button>
             </li>
           </ul>
+          <!-- 日记详情弹窗 -->
+          <div v-if="selectedDiary" class="modal-overlay" @click.self="closeDiaryDetail">
+            <div class="modal-content">
+              <h2>{{ selectedDiary.title }}</h2>
+              <p>{{ selectedDiary.content }}</p>
+              <p class="modal-meta"> {{ selectedDiary.createdAt }}</p>
+              <button @click="closeDiaryDetail">关闭</button>
+            </div>
+          </div>
         </div>
+
         <div v-else class="empty-state">
           <p>暂无日记记录</p>
           <button v-if="isCurrentUser" @click="openAddDiaryModal" class="add-first-diary-btn">添加第一篇日记</button>
@@ -216,6 +233,7 @@ import { useRoute } from 'vue-router' // ✅ 引入 useRoute
 
 const route = useRoute()
 const studentId = ref<string>('')
+const isFriend = ref(true)
 
 // 从 URL 中提取参数
 studentId.value = String(route.params.id)
@@ -230,6 +248,18 @@ const aiDiaryContent = ref('') // 存放生成的日记内容
 
 const localId = localStorage.getItem('studentId')
 const isCurrentUser = computed(() => studentId.value == localId)
+
+
+const selectedDiary = ref(null)  // 当前被点击查看的日记对象
+
+const viewDiaryDetail = (diary) => {
+  selectedDiary.value = diary
+}
+
+const closeDiaryDetail = () => {
+  selectedDiary.value = null
+}
+
 const user = ref({
   userId: '',
   avatarUrl: '',
@@ -258,7 +288,40 @@ const editForm = ref({
   avatarFile: null,
   avatarPreview: ''
 })
+const addFriend = async () => {
+  if (!confirm('确认关注他？')) return
+  try {
+    await axios.put('/userFriend/addFriendById', {
+      userId: localStorage.getItem('studentId'),
+      friendId: studentId.value
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    isFriend.value = true;
+  } catch (err) {
+    console.error(err)
+  }
+}
 
+const cancelFriend = async () => {
+  if (!confirm('确认取关他？')) return
+  try {
+    await axios.delete('/userFriend/deleteFriendById', {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      data: {
+        userId: localStorage.getItem('studentId'),
+        friendId: studentId.value
+      }
+    })
+    isFriend.value = false;
+  } catch (err) {
+    console.error(err)
+  }
+}
 const changeVisible= async (id) => {
   if (!confirm('确定要公开吗？')) return
   try {
@@ -411,10 +474,7 @@ const saveProfile = async () => {
 
 // 原有日记相关方法保持不变
 const searchDiaries = () => {}
-const viewDiaryDetail = (id) => {
-  console.log(id)
-  router.push(`/diary/${id}`)
-}
+
 const openAddDiaryModal = () => {
   isAddDiaryModalVisible.value = true
   newDiary.value = {
@@ -569,6 +629,27 @@ const deleteDiary = async (id) => {
 }
 
 onMounted(fetchData)
+
+onMounted(async () => {
+  if (!isCurrentUser.value) {
+    try {
+      const res = await axios.post('/userFriend/isMyFriend', {
+        userId: localStorage.getItem('studentId'),
+        friendId: studentId.value
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      isFriend.value = res === true
+      console.log('是否是好友:', isFriend.value)
+    } catch (e) {
+      console.error('判断好友关系失败', e)
+    }
+  }
+})
+
 </script>
 
 <style scoped>
@@ -1269,4 +1350,25 @@ onMounted(fetchData)
 .homepage-bg {
   overflow: hidden; /* 禁止滚动 */
 }
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+}
+
 </style>

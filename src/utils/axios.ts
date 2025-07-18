@@ -22,16 +22,16 @@ instance.interceptors.request.use(config => {
 instance.interceptors.response.use(response => {
     return response.data
 }, error => {
-    if (error.response?.status === 401) {
-        // 未授权，跳转登录
-        window.location.href = '/login'
-    } else if (error.response?.status === 403) {
-        alert('权限不足')
-    } else if (error.response?.status === 404) {
-        alert('管理员好像把你删了，呼呼呼')
-    } else {
-        console.error('请求失败', error)
-    }
+    // if (error.response?.status === 401) {
+    //     // 未授权，跳转登录
+    //     window.location.href = '/login'
+    // } else if (error.response?.status === 403) {
+    //     alert('角色错误')
+    // } else if (error.response?.status === 404) {
+    //     alert('管理员好像把你删了，呼呼呼')
+    // } else {
+    //     console.error('请求失败', error)
+    // }
     return Promise.reject(error)
 })
 

@@ -3,6 +3,9 @@ import { useRouter } from 'vue-router'
 import { ref } from 'vue'
 import Schedule from './DashBoard/Schedule.vue'
 import axios from '@/utils/axios' // 确保路径正确
+import { ElDialog, ElIcon } from 'element-plus'
+import { Loading } from '@element-plus/icons-vue'
+
 
 
 const scheduleRef = ref(null)
@@ -118,7 +121,7 @@ async function generateSchedule() {
     <!-- 新增：AI智能生成日程模块 -->
     <div class="dashboard-ai-bar">
       <div class="dashboard-ai-title">
-        Ta律，做你想做的
+        做你想做的
       </div>
       <div class="dashboard-ai-form">
         <input
@@ -140,9 +143,12 @@ async function generateSchedule() {
           type="datetime-local"
           placeholder="结束时间"
         />
-        <button class="ai-btn" @click="generateSchedule" :disabled="aiLoading">
-          {{ aiLoading ? '生成中...' : 'AI生成' }}
+        <!-- 一键生成按钮 -->
+        <button @click="generateSchedule">
+          一键规划日程
         </button>
+
+
       </div>
       <div v-if="aiError" class="ai-error">{{ aiError }}</div>
       <div v-if="aiResult" class="ai-result">{{ aiResult }}</div>
@@ -152,7 +158,13 @@ async function generateSchedule() {
     <div class="dashboard-main">
       <Schedule ref="scheduleRef" style="width:100%;height:100%;" />
     </div>
-
+    <!-- 弹窗：生成中 -->
+    <el-dialog v-model="aiLoading" title="提示" width="30%" :close-on-click-modal="false" :show-close="false">
+      <div style="text-align: center;">
+        <el-icon><Loading /></el-icon>
+        <p>日程生成中，请稍等...</p>
+      </div>
+    </el-dialog>
   </div>
 </template>
 

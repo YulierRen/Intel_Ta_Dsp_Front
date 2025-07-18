@@ -5,7 +5,9 @@
   >
     <div class="dashboard-header">
       <button @click="prevMonth">《</button>
-      <span>{{ year }} 年 {{ month + 1 }} 月</span>
+      <span>{{ year }} 年 {{ month + 1 }} 月
+        颜色越深，这一天日程安排越满哦
+      </span>
       <button @click="nextMonth">》</button>
     </div>
 
@@ -32,13 +34,30 @@
           这一天暂无日程
         </div>
         <ul v-else class="event-list">
-          <li v-for="e in sortedEvents" :key="e.id" class="event-item" @click.stop="openEditModal(e)">
+          <li
+              v-for="e in sortedEvents"
+              :key="e.id"
+              class="event-item"
+              @click.stop="openEditModal(e)"
+          >
             <div class="event-time">
               {{ formatTime(e.startTime) }} - {{ formatTime(e.endTime) }}
             </div>
             <div class="event-title">{{ e.title }}</div>
             <div class="event-desc">{{ e.description }}</div>
             <div class="event-location">📍{{ e.location }}</div>
+
+            <!-- 如果未完成，显示按钮 -->
+            <button
+                v-if="!e.isCompleted"
+                class="right-btn"
+                @click.stop="handleRightButtonClick(e)"
+            >
+              完成
+            </button>
+
+            <!-- 如果已完成，显示纯文字 -->
+            <span v-else class="right-label">已完成</span>
           </li>
         </ul>
         <!-- 日记按钮，点击唤起DayNote弹窗，传递当前右侧日期 -->
@@ -136,7 +155,16 @@ const getEventsForDate = (day) => {
       e.startTime.startsWith(datePrefix)
   )
 }
-
+const handleRightButtonClick = async (schedule) => {
+  if(!confirm('已完成？'))return
+  try{
+    schedule.isCompleted = true
+    await updateSchedule(schedule)
+    await loadSchedule()
+  }catch(err){
+    console.log(err)
+  }
+}
 function showDetails(day) {
   selectedDay.value = day
 }
@@ -324,6 +352,7 @@ function openEditModal(event) {
   modalForm.startTime = toInputDateTimeStr(event.startTime)
   modalForm.endTime = toInputDateTimeStr(event.endTime)
   modalForm.location = event.location
+  modalForm.isCompleted = event.isCompleted
   showModal.value = true
 }
 
@@ -714,6 +743,24 @@ defineExpose({
   transform: scale(0.96) translateY(2px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   color: #004b91;
+}
+.event-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding-right: 40px; /* 给右侧按钮留空间 */
+}
+
+.right-btn {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  background-color: #f0f0f0;
+  border: none;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 4px;
 }
 
 </style>

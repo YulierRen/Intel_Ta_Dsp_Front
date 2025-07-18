@@ -92,7 +92,9 @@
                 {{ diary.content.length > 50 ? diary.content.slice(0, 50) + '...' : diary.content }}
               </p>
               <div class="diary-meta">
-                <div class="diary-meta-user">用户 {{ diary.userId }}</div>
+                <button class="diary-meta-user" @click="goToUserHome(diary.userId)">
+                  看看ta的主页
+                </button>
                 <div class="diary-meta-date">{{ formatDate(diary.createdAt) }}</div>
               </div>
               <button @click="openDiary(diary)" class="read-btn">阅读全文</button>
@@ -230,7 +232,9 @@ const paginatedDiaries = computed(() => {
   const end = start + itemsPerPage
   return filteredDiaries.value.slice(start, end)
 })
-
+const goToUserHome = (userId: number | string) => {
+  router.push(`/homepage/${userId}`)
+}
 const visiblePages = computed(() => {
   const pages = []
   const total = totalPages.value

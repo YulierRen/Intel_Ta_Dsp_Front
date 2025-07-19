@@ -1356,19 +1356,67 @@ onMounted(async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.4);
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 999;
+  justify-content: center;
+  z-index: 1000;
 }
 
 .modal-content {
-  background-color: white;
-  padding: 24px;
-  border-radius: 8px;
-  width: 80%;
+  background-color: #e1f5fe;
+  border: 2px solid #4fc3f7;
+  border-radius: 16px;
+  padding: 32px; /* 增加内边距 */
+  width: 90%;
   max-width: 600px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease;
+  font-size: 18px; /* 默认文字字号更大 */
+  line-height: 1.8;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: #0288d1;
+  font-size: 26px; /* 标题加大 */
+}
+
+.modal-meta {
+  font-size: 16px; /* 时间信息也加大 */
+  color: #555;
+  margin-top: 16px;
+}
+
+.modal-content button {
+  margin-top: 24px;
+  background-color: #4fc3f7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 16px; /* 按钮文字加大 */
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.modal-content button:hover {
+  background-color: #29b6f6;
+}
+
+.modal-content button:active {
+  transform: scale(0.96);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 </style>

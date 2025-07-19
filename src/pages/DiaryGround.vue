@@ -816,4 +816,25 @@ onMounted(async () => {
   left: 18px;
   z-index: 2000;
 }
+.diary-meta-user {
+  background-color: #4fc3f7; /* 天蓝色 */
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.diary-meta-user:hover {
+  background-color: #29b6f6; /* 深一点的蓝 */
+}
+
+.diary-meta-user:active {
+  transform: scale(0.96);
+}
+
 </style>

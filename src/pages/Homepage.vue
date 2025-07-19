@@ -121,23 +121,44 @@
     </div>
     <el-dialog
         v-model="showDiaryDialog"
-        title="AI 生成的日记"
-        width="50%"
+        title="✨ AI 生成的日记 ✨"
+        width="60%"
         :close-on-click-modal="false"
+        :before-close="handleBeforeClose"
         custom-class="custom-dialog-style"
     >
-      <el-input
-          type="textarea"
-          v-model="aiDiaryContent"
-          :placeholder="reasoningContent"
-          rows="10"
-          class="custom-textarea"
-      />
 
+    <div class="ai-diary-content">
+        <div class="content-header">
+          <div class="ai-icon">🤖</div>
+          <div class="header-text">
+            <h3>DeepSeek AI 正在为您生成日记...</h3>
+            <p>基于您的时间段和活动记录，AI将为您总结这段时间的收获</p>
+          </div>
+        </div>
+
+        <div class="content-area">
+          <div class="reasoning-section" v-if="reasoningContent">
+            <h4>🤔 思考过程</h4>
+            <div class="reasoning-text">{{ reasoningContent }}</div>
+          </div>
+
+          <div class="diary-section">
+            <h4>📝 生成的日记</h4>
+            <el-input
+                type="textarea"
+                v-model="aiDiaryContent"
+                placeholder="AI正在生成您的日记内容..."
+                rows="12"
+                class="custom-textarea"
+            />
+          </div>
+        </div>
+      </div>
       <template #footer>
         <div class="footer-wrapper">
-          <el-button v-if="save" type="primary" class="save-button"  @click="saveDiary">
-            保存
+          <el-button v-if="save" type="primary" class="save-button" @click="saveDiary">
+            💾 保存日记
           </el-button>
         </div>
       </template>
@@ -163,10 +184,11 @@ const aiDiaryContent = ref('') // 存放生成的日记内容
 
 
 const user = ref({
+  userId: '',
   avatarUrl: '',
   nickname: '',
   gender: '',
-  age: '',
+  birthday: '',
   bio: ''
 })
 
@@ -174,37 +196,72 @@ const diaries = ref([])
 const searchTerm = ref('')
 const isAddDiaryModalVisible = ref(false)
 const newDiary = ref({
-  title:"",
+  title:"请输入标题",
   startdate: new Date().toISOString().split('T')[0],
   enddate: new Date().toISOString().split('T')[0],
 })
+const handleBeforeClose = (done) => {
+  if (save.value) {
+    done() // 允许关闭
+  } else {
+    // 不允许关闭，可以加提示
+    ElMessage.warning('请等待 AI 生成完日记再关闭窗口')
+  }
+}
 
+// 新增编辑模态框相关状态
+const isEditModalVisible = ref(false)
+const editForm = ref({
+  nickname: '',
+  gender: '',
+  birthday: '',
+  bio: '',
+  avatarFile: null,
+  avatarPreview: ''
+})
+
+const changeVisible= async (id) => {
+  if (!confirm('确定要公开吗？')) return
+  try {
+    await axios.post('/userDiary/setPublicStatus', null, {
+      params: {
+        id: id,
+        isPublic:true
+      },
+    })
+  } catch (error) {
+    alert('公开失败，请重试')
+  }finally {
+    location.reload() // ✅ 成功提示结束后刷新页面
+  }
+}
 const filteredDiaries = computed(() => {
   if (!searchTerm.value) return diaries.value
   return diaries.value.filter(diary => {
     return diary.title.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-      diary.content.toLowerCase().includes(searchTerm.value.toLowerCase())
+        diary.content.toLowerCase().includes(searchTerm.value.toLowerCase())
   })
 })
 
 const fetchData = async () => {
   try {
     const studentId = localStorage.getItem('studentId')
-    const [profileRes, diariesRes] = await Promise.all([
-      axios.post('/userProfile/myProfile', null, {
-        params: { userId: studentId }
-      }),
-      axios.post('/userDiary/findAll', null, {
-        params: { userId: studentId }
-      })
-    ])
+    // 获取用户档案
+    const profileRes = await axios.post('/userProfile/myProfile', null, {
+      params: { userId: studentId }
+    })
     user.value = {
-      avatarUrl: profileRes.avatarUrl || generateAvatar(profileRes.nickname || profileRes.username),
-      nickname: profileRes.nickname || profileRes.username || '未命名用户',
-      gender: profileRes.gender || '未知',
-      age: profileRes.age || '',
+      userId: profileRes.userId,
+      avatarUrl: profileRes.avatarUrl || generateAvatar(profileRes.nickname),
+      nickname: profileRes.nickname || '未命名用户',
+      gender: genderToText(profileRes.gender),
+      birthday: profileRes.birthday || '',
       bio: profileRes.bio || '这个人很懒，什么都没留下~'
     }
+    // 获取日记
+    const diariesRes = await axios.post('/userDiary/findAll', null, {
+      params: { userId: studentId }
+    })
     diaries.value = (diariesRes || []).map(d => ({
       id: d.id,
       date: d.createdAt ? formatDate(d.createdAt) : '未知日期',
@@ -214,20 +271,108 @@ const fetchData = async () => {
       isPublic: d.isPublic
     }))
   } catch (error) {
-    // ...异常处理...
+    console.error('获取数据失败:', error)
   }
 }
+
 const goToDashboard = () => {
   router.push('/dashboard')
 }
+
 const generateAvatar = (name) => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || '用户')}&background=4e8cff&color=fff&length=1`
 }
+
 const formatDate = (dateString) => {
   const options = { year: 'numeric', month: 'long', day: 'numeric' }
   return new Date(dateString).toLocaleDateString('zh-CN', options)
 }
-onMounted(fetchData)
+
+// 性别枚举转中文
+function genderToText(gender) {
+  if (!gender) return '未知'
+  if (gender === 'MALE') return '男'
+  if (gender === 'FEMALE') return '女'
+  if (gender === 'OTHER') return '其他'
+  return '未知'
+}
+function textToGender(text) {
+  if (text === '男') return 'MALE'
+  if (text === '女') return 'FEMALE'
+  if (text === '其他') return 'OTHER'
+  return 'OTHER'
+}
+
+// 新增个人信息编辑相关方法
+const openEditModal = () => {
+  editForm.value = {
+    nickname: user.value.nickname,
+    gender: user.value.gender,
+    birthday: user.value.birthday,
+    bio: user.value.bio,
+    avatarFile: null,
+    avatarPreview: ''
+  }
+  isEditModalVisible.value = true
+}
+
+const closeEditModal = () => {
+  isEditModalVisible.value = false
+}
+
+const handleAvatarUpload = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    editForm.value.avatarFile = file
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      editForm.value.avatarPreview = e.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+const saveProfile = async () => {
+  try {
+    const studentId = localStorage.getItem('studentId')
+    let avatarUrl = user.value.avatarUrl
+
+    // ✅ 若用户上传了新头像文件，则先上传图片
+    if (editForm.value.avatarFile) {
+      const formData = new FormData()
+      formData.append('file', editForm.value.avatarFile)
+
+      const uploadRes = await axios.post<{ url: string }>('/userProfile/upload/avatar',formData)
+      console.log(uploadRes.url)
+      avatarUrl = uploadRes.url // 👈 服务器返回的头像访问地址
+    }
+
+    // ✅ 构造UserProfile对象
+    const profile = {
+      userId: Number(studentId),
+      nickname: editForm.value.nickname,
+      gender: textToGender(editForm.value.gender),
+      birthday: editForm.value.birthday,
+      bio: editForm.value.bio,
+      avatarUrl // ✅ 赋值新头像地址
+    }
+
+    // ✅ 更新个人资料
+    await axios.put('/userProfile/updateProfile', profile)
+
+    // ✅ 同步更新页面上数据
+    user.value = {
+      ...user.value,
+      ...profile
+    }
+    closeEditModal()
+  } catch (error) {
+    console.error('更新个人资料失败:', error)
+    alert('更新失败，请重试')
+  }
+}
+
+// 原有日记相关方法保持不变
 const searchDiaries = () => {}
 const viewDiaryDetail = (id) => {
   console.log(id)
@@ -321,6 +466,21 @@ const generateDiaryStream = async () => {
   }
 };
 const generateAiDiary = () => {
+  const { title, startdate, enddate } = newDiary.value
+
+  // === 字段非空校验 ===
+  if (!title || !startdate || !enddate) {
+    alert('请填写标题、开始时间和结束时间')
+    return
+  }
+
+  // === 开始时间不能晚于结束时间 ===
+  const start = new Date(startdate)
+  const end = new Date(enddate)
+  if (start > end) {
+    alert('开始时间不能晚于结束时间')
+    return
+  }
   generateDiaryStream();
 };
 const saveDiary = async () => {
@@ -357,12 +517,29 @@ const saveDiary = async () => {
 }
 
 const addDiary = async () => {
+  const { title, startdate, enddate } = newDiary.value
+
+  // === 字段非空校验 ===
+  if (!title || !startdate || !enddate) {
+    alert('请填写标题、开始时间和结束时间')
+    return
+  }
+
+  // === 开始时间不能晚于结束时间 ===
+  const start = new Date(startdate)
+  const end = new Date(enddate)
+  if (start > end) {
+    alert('开始时间不能晚于结束时间')
+    return
+  }
+
   try {
     const studentId = localStorage.getItem('studentId')
     const res = await axios.post('/userDiary/add', {
       userId: studentId,
       ...newDiary.value
     })
+
     diaries.value.unshift({
       id: res.id,
       date: formatDate(res.createdAt || new Date()),
@@ -370,11 +547,13 @@ const addDiary = async () => {
       content: res.content,
       excerpt: res.content.slice(0, 60) + (res.content.length > 60 ? '...' : '')
     })
+
     closeAddDiaryModal()
   } catch (error) {
-    alert('添加日记失败，请重试')
+    console.log(error)
   }
 }
+
 const deleteDiary = async (id) => {
   if (!confirm('确定要删除这篇日记吗？')) return
   try {
@@ -386,37 +565,152 @@ const deleteDiary = async (id) => {
     alert('删除日记失败，请重试')
   }
 }
+
+onMounted(fetchData)
 </script>
 
 <style scoped>
 .custom-dialog-style {
-  border-radius: 18px;
-  background: #f0f6ff;
-  box-shadow: 0 8px 24px rgba(0, 128, 255, 0.15);
-  padding: 20px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #f8fbff 0%, #e8f4ff 100%);
+  box-shadow: 0 20px 60px rgba(90, 160, 255, 0.25), 0 0 0 3px rgba(0, 0, 0, 0.12);
+  padding: 0;
+  min-width: 400px;
+  overflow: hidden;
+  border: 3px solid rgba(0, 0, 0, 0.18);
 }
 
-.custom-textarea {
+.ai-diary-content {
+  padding: 0;
+}
+
+.content-header {
+  background: linear-gradient(135deg, #74ABE2 0%, #5563DE 100%);
+  color: white;
+  padding: 32px 36px 24px 36px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: -3px -3px 0 -3px;
+}
+
+.ai-icon {
+  font-size: 48px;
+  animation: pulse 2s infinite;
+}
+
+.header-text h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.5px;
+}
+
+.header-text p {
+  font-size: 16px;
+  opacity: 0.9;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.content-area {
+  padding: 32px 36px 24px 36px;
+}
+
+.reasoning-section, .diary-section {
+  margin-bottom: 24px;
+}
+
+.reasoning-section h4, .diary-section h4 {
   font-size: 18px;
-  border-radius: 14px;
-  background-color: #f9fbff;
-  padding: 12px;
-  border: 1px solid #c6dafc;
-  color: #333;
+  font-weight: 600;
+  color: #5563DE;
+  margin: 0 0 16px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0f6ff;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 8px 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
+.reasoning-text {
+  background: #f0f6ff;
+  border: 3px solid rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
+  padding: 20px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: #333;
+  max-height: 120px;
+  overflow-y: auto;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+.custom-dialog-style .el-dialog__header {
+  font-size: 26px;
+  font-weight: bold;
+  color: #3a8ee6;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid #e0efff;
+  letter-spacing: 1px;
+  text-align: center;
+}
+.custom-dialog-style .el-dialog__title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #3a8ee6;
+  letter-spacing: 1px;
+  text-align: center;
+}
+.custom-dialog-style .el-dialog__body {
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+.custom-textarea .el-textarea__inner {
+  font-size: 16px;
+  border-radius: 16px;
+  background-color: #fafbff;
+  border: 3px solid rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  color: #333;
+  min-height: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  line-height: 1.6;
+  font-weight: 500;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.custom-textarea .el-textarea__inner:focus {
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+}
 .footer-wrapper {
   text-align: right;
-  margin-top: 12px;
+  margin-top: 24px;
 }
-
 .save-button {
-  background-color: #409eff;
+  background: linear-gradient(135deg, #74ABE2 0%, #5563DE 100%);
   border: none;
-  padding: 10px 24px;
-  border-radius: 12px;
-  font-weight: bold;
+  border-radius: 16px;
+  padding: 14px 36px;
   font-size: 16px;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 6px 20px rgba(116, 171, 226, 0.3);
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+}
+.save-button:hover {
+  background: linear-gradient(90deg, #3a8ee6 0%, #6cb7ff 100%);
+  box-shadow: 0 8px 24px rgba(60, 160, 255, 0.28);
 }
 .homepage-bg {
   min-height: 100vh;

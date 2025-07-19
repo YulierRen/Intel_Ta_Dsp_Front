@@ -423,6 +423,26 @@ defineExpose({
 </script>
 
 <style scoped>
+.right-btn {
+  background-color: #24bbee; /* 绿色完成风格 */
+  color: #00027c;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.right-btn:hover {
+  background-color: #ffffff; /* 深一点 */
+}
+
+.right-btn:active {
+  transform: scale(0.97);
+}
+
 .dashboard {
   max-width: 2000px;
   max-height: 1500px;
@@ -752,16 +772,7 @@ defineExpose({
   padding-right: 40px; /* 给右侧按钮留空间 */
 }
 
-.right-btn {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  background-color: #f0f0f0;
-  border: none;
-  cursor: pointer;
-  padding: 6px 10px;
-  border-radius: 4px;
-}
+
 
 </style>
 

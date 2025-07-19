@@ -95,20 +95,7 @@ async function generateSchedule() {
           <div class="sidebar-desc">我的主页</div>
         </div>
       </div>
-      <div class="sidebar-card top" @click="gotoDiaryGround">
-        <div class="sidebar-icon">📖</div>
-        <div>
-          <div class="sidebar-title">可扩展选项</div>
-          <div class="sidebar-desc">建设中</div>
-        </div>
-      </div>
-      <div class="sidebar-card top" @click="gotoDiaryGround">
-        <div class="sidebar-icon">📖</div>
-        <div>
-          <div class="sidebar-title">可扩展选项</div>
-          <div class="sidebar-desc">建设中</div>
-        </div>
-      </div>
+
       <div class="sidebar-card bottom" @click="gotoFriendList">
         <div class="sidebar-icon">👥</div>
         <div>
@@ -144,9 +131,10 @@ async function generateSchedule() {
           placeholder="结束时间"
         />
         <!-- 一键生成按钮 -->
-        <button @click="generateSchedule">
+        <button class="blue-rounded-btn" @click="generateSchedule">
           一键规划日程
         </button>
+
 
 
       </div>
@@ -428,4 +416,19 @@ input[type="date"] {
     min-width: 0;
   }
 }
+.blue-rounded-btn {
+  background-color: #d0e8ff;
+  color: #007acc;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.blue-rounded-btn:hover {
+  background-color: #a8d1ff;
+}
+
 </style>

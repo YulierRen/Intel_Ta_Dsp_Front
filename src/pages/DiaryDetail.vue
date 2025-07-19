@@ -80,7 +80,63 @@ onMounted(fetchDiary)
     </div>
   </div>
 </template>
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import axios from '../utils/axios'
 
+const route = useRoute()
+const router = useRouter()
+const id = route.params.id as string
+
+// 表单数据
+const form = ref({
+  id: '',
+  title: '',
+  content: '',
+  isPublic: false
+})
+
+// 获取日记详情
+const fetchDiary = async () => {
+  try {
+    const res = await axios.get('/userDiary/findById', {
+      params: { id }
+    })
+    form.value = res
+  } catch (err) {
+    console.error('加载失败', err)
+  }
+}
+
+// 提交更新
+const updateDiary = async () => {
+  try {
+    await axios.put('/userDiary/update', form.value)
+    alert('更新成功')
+    router.push('/homepage') // 返回日记列表页，可根据你的路由改
+  } catch (err) {
+    alert('更新失败')
+    console.error(err)
+  }
+}
+
+// 删除日记
+const deleteDiary = async () => {
+  if (!confirm('确认删除这条日记吗？')) return
+  try {
+    await axios.post('/userDiary/delete', null, {
+      params: { id: form.value.id }
+    })
+    alert('删除成功')
+    router.push('/homepage')
+  } catch (err) {
+    alert('删除失败')
+  }
+}
+
+onMounted(fetchDiary)
+</script>
 <style scoped>
 .diary-editor {
   max-width: 600px;

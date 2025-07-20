@@ -342,9 +342,9 @@ const saveProfile = async () => {
       const formData = new FormData()
       formData.append('file', editForm.value.avatarFile)
 
-      const uploadRes = await axios.post<{ url: string }>('/userProfile/upload/avatar',formData)
-      console.log(uploadRes.url)
-      avatarUrl = uploadRes.url // 👈 服务器返回的头像访问地址
+      const uploadRes = await axios.post<{ url: string }>('/oss/upload',formData)
+      console.log(uploadRes)
+      avatarUrl = uploadRes // 👈 服务器返回的头像访问地址
     }
 
     // ✅ 构造UserProfile对象
